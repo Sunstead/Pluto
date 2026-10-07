@@ -1,0 +1,57 @@
+// The tailnet policy (Tailscale admin console > Access controls), kept here so
+// it's reviewed like everything else. Paste the whole file over the default
+// policy, with Jupiter's Tailscale IP filled in below. The admin console is
+// what's live: change this file and the console together.
+//
+// Before: the default, every device reaches every device. After: your own
+// devices still reach everything; Pluto, the public edge, reaches Jupiter's
+// Caddy and nothing else. If Pluto were ever taken over, that's all the
+// tailnet it gets.
+{
+	"tagOwners": {
+		// Pluto joins with a pre-approved, single-use auth key carrying this
+		// tag (scripts/bootstrap.sh). Tagged devices don't expire.
+		"tag:pluto": ["autogroup:admin"],
+	},
+
+	"hosts": {
+		// Jupiter's Tailscale IPv4: `tailscale ip -4 jupiter`. The same value
+		// as JUPITER_TS_IP in Pluto's .env.
+		"jupiter": "100.64.0.1",
+	},
+
+	"grants": [
+		// Your devices: everything, as before. That includes SSH to Pluto and
+		// its Cosmos agent (https://pluto.<tailnet>.ts.net).
+		// If you share Jupiter with people outside the tailnet, add
+		// "autogroup:shared" to src, or they lose access.
+		{"src": ["autogroup:member"], "dst": ["*"], "ip": ["*"]},
+
+		// Pluto: Jupiter's Caddy only. The public sites, plus Pluto's Cosmos
+		// agent fetching Authentik's keys and posting to ntfy, all go
+		// through it.
+		{"src": ["tag:pluto"], "dst": ["jupiter"], "ip": ["tcp:443"]},
+	],
+
+	// Tailscale SSH, unchanged from the default. Pluto uses plain OpenSSH
+	// over the tailnet instead, so this doesn't cover it.
+	"ssh": [
+		{
+			"action": "check",
+			"src":    ["autogroup:member"],
+			"dst":    ["autogroup:self"],
+			"users":  ["autogroup:nonroot", "root"],
+		},
+	],
+
+	// Checked by the admin console on every save.
+	"tests": [
+		{
+			"src":    "tag:pluto",
+			"proto":  "tcp",
+			"accept": ["jupiter:443"],
+			// SSH, plain HTTP, and Jupiter's Cosmos agent.
+			"deny": ["jupiter:22", "jupiter:80", "jupiter:7700"],
+		},
+	],
+}

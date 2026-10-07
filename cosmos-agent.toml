@@ -1,0 +1,103 @@
+# cosmos-agent config for Pluto, the public edge.
+#
+# Sign-in is through Authentik on Jupiter with the same issuer as Jupiter's
+# agent, so one session in the app covers both nodes. Nothing secret is here.
+
+node_name = "pluto"
+
+# Same as Jupiter: admins can start, stop and restart containers from the app.
+# The agent always refuses to act on its own container. Must sit above the
+# first [section].
+allow_actions = true
+
+[server]
+# Loopback only, so nothing on the public interface can reach it, firewall or
+# not. The tailnet reaches it as https://pluto.<tailnet>.ts.net through
+# `tailscale serve` (scripts/bootstrap.sh), which holds the certificate.
+bind = "127.0.0.1:7700"
+
+[auth]
+# Browser EventSource/WebSocket cannot set headers, so the web build needs
+# this. The Tauri app uses the Authorization header either way.
+allow_query_token = true
+allow_anonymous = false
+
+[auth.oidc]
+# Fetched over the tailnet: auth.jupiter.sunstead.net resolves to Jupiter's
+# Tailscale IP, and the tailnet policy lets Pluto reach jupiter:443 (and
+# nothing else).
+issuer = "https://auth.jupiter.sunstead.net/application/o/cosmos/"
+client_id = "cosmos"
+admin_groups = ["homelab-admins"]
+
+[cors]
+# The web UI comes from Jupiter's agent, so it calls this one cross-origin.
+# The desktop app's origins are built in.
+extra_origins = ["https://cosmos.jupiter.sunstead.net"]
+
+[host]
+interval_ms = 1000
+
+# Under host networking the agent sees docker0, the bridge, every veth and
+# the tailnet; the public interface is the one worth charting.
+net_exclude = ["lo*", "docker*", "br-*", "veth*", "tailscale*"]
+
+[[host.disks]]
+path  = "/host/rootfs"
+label = "/"
+
+[docker]
+socket = "/var/run/docker.sock"
+interval_ms = 2000
+stats_concurrency = 4
+
+allow_logs = true
+watch_events = true
+
+[history]
+enabled = true
+path = "/var/lib/cosmos-agent/metrics.db"
+retain_1s_secs = 3600      # 1 hour at full resolution
+retain_1m_secs = 604800    # 7 days
+retain_5m_secs = 7776000   # 90 days
+
+[backups]
+# Nothing here to back up: Pluto is rebuilt from this repository, and its
+# certificates and CrowdSec state come back on their own.
+enabled = false
+
+[tailscale]
+# tailscaled runs on the host; the socket is bind-mounted in compose.
+enabled = true
+socket = "/host/tailscale/tailscaled.sock"
+interval_ms = 10000
+
+[wol]
+# Pluto isn't on the home LAN.
+enabled = false
+
+[events]
+# Notification channels (ntfy on Jupiter, which Pluto reaches over the
+# tailnet) are added in the app, not here.
+enabled = true
+retain_days = 180
+disk_warn_pct = 85
+disk_critical_pct = 95
+
+[uptime]
+# Nothing here has a cosmos.service.url label. Add HTTP checks for the public
+# names in the app instead: from Pluto they test the whole path a visitor
+# takes (this Caddy, CrowdSec, the tunnel, Jupiter's Caddy, the app).
+enabled = true
+interval_secs = 60
+
+[updates]
+# Shows newer tags of the images running here. Nothing applies them: there's
+# no update workflow, deploys are scripts/deploy.sh by hand.
+enabled = true
+min_age_days = 3
+
+[state]
+# Settings edited from the UI, and the event log. Must be on the writable
+# volume.
+path = "/var/lib/cosmos-agent/state.db"

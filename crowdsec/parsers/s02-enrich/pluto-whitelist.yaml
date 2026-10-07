@@ -1,0 +1,15 @@
+# Normal traffic from the apps behind Pluto that the generic HTTP scenarios
+# would count against the client. Whitelisted lines are dropped before any
+# scenario sees them; AppSec still checks every one of these requests inline.
+# Add to this when `cscli alerts list` shows a false positive
+# (docs/RUNBOOK.md); keep each entry as narrow as the noise it covers.
+name: pluto/app-noise
+description: "Expected traffic from OpenCloud and Immich clients"
+whitelist:
+  reason: "app traffic behind Pluto"
+  expression:
+    # OpenCloud's desktop and mobile clients sync over WebDAV: PROPFIND and
+    # friends on paths that may not exist yet, which reads as probing.
+    - >-
+      evt.Meta.target_fqdn == 'files.pwbcloud.com' &&
+      evt.Meta.http_verb in ['PROPFIND', 'PROPPATCH', 'REPORT', 'MKCOL', 'MOVE', 'COPY', 'LOCK', 'UNLOCK']

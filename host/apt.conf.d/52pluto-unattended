@@ -1,0 +1,23 @@
+// Installed as /etc/apt/apt.conf.d/52pluto-unattended. Adds to Debian's
+// 50unattended-upgrades, which already covers the Debian and Debian-Security
+// archives.
+
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+APT::Periodic::AutocleanInterval "7";
+
+Unattended-Upgrade::Origins-Pattern {
+        // Tailscale and Docker come from their own repositories
+        // (scripts/bootstrap.sh). Docker's daemon restarts on upgrade;
+        // live-restore (host/docker/daemon.json) keeps the containers up.
+        "site=pkgs.tailscale.com";
+        "site=download.docker.com";
+};
+
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+
+// A kernel or libc update only takes effect after a reboot. The edge is down
+// for about a minute while it does; this is the quietest time for that.
+Unattended-Upgrade::Automatic-Reboot "true";
+Unattended-Upgrade::Automatic-Reboot-Time "04:30";

@@ -1,0 +1,11 @@
+# The AppSec component Caddy's `appsec` handler asks about every request.
+# appsec-default runs the virtual patches and the generic rules in-band, so a
+# match is blocked before the request reaches Jupiter. 0.0.0.0 inside the
+# container; compose publishes it on the host's loopback only.
+source: appsec
+name: pluto-appsec
+listen_addr: 0.0.0.0:7422
+appsec_configs:
+  - crowdsecurity/appsec-default
+labels:
+  type: appsec

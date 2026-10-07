@@ -1,0 +1,7 @@
+# Caddy's JSON access log (caddy/Caddyfile, `log access`), shared through the
+# caddy_logs volume. Rolled files are renamed, so only the live one is read.
+source: file
+filenames:
+  - /var/log/caddy/access.log
+labels:
+  type: caddy

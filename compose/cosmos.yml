@@ -1,0 +1,48 @@
+services:
+  cosmos-agent:
+    # Pinned to the same release as Jupiter's (Jupiter/compose/cosmos.yml):
+    # each release pairs with its cosmos-agent.toml, and a newer or older agent
+    # refuses a config it does not understand. Bump both together.
+    image: ghcr.io/sunstead/cosmos-agent:0.10.0
+    container_name: cosmos-agent
+    restart: unless-stopped
+
+    # Required: the agent reads host network stats from /proc/net/dev, which is
+    # per network namespace. It binds 127.0.0.1:7700 only (cosmos-agent.toml);
+    # the tailnet reaches it through `tailscale serve` (scripts/bootstrap.sh).
+    network_mode: host
+
+    read_only: true                       # rootfs immutable; SQLite is on the named volume
+    cap_drop: [ALL]                       # :7700 is above 1024, so no CAP_NET_BIND_SERVICE
+    security_opt: [no-new-privileges:true]
+    user: "65532:65532"
+    group_add: ["${DOCKER_GID}"]          # uid 65532 can't read docker.sock without this
+
+    environment:
+      COSMOS_AGENT_CONFIG: /etc/cosmos-agent/agent.toml
+      COSMOS_NODE_NAME: pluto
+      RUST_LOG: "info,cosmos_agent=info"
+      TZ: ${TZ:-Etc/UTC}
+
+    volumes:
+      - ./cosmos-agent.toml:/etc/cosmos-agent/agent.toml:ro
+
+      # `:ro` on a unix socket is not a security control: anyone who can connect()
+      # has the full Docker API. The real control is `allow_actions` in the config.
+      - /var/run/docker.sock:/var/run/docker.sock
+
+      # Only the filesystems actually charted, named in [[host.disks]].
+      - /:/host/rootfs:ro,rslave
+
+      # Tailnet devices: tailscaled runs on the host here (not in a container,
+      # as on Jupiter). uid 65532 gets read-only access from tailscaled.
+      - /var/run/tailscale:/host/tailscale
+
+      - cosmos_agent_data:/var/lib/cosmos-agent   # SQLite; the only writable path
+
+    labels:
+      cosmos.service: cosmos
+      cosmos.service.description: Homelab monitoring agent
+
+volumes:
+  cosmos_agent_data:

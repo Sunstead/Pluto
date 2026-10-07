@@ -1,0 +1,9 @@
+# Scenarios listed here still raise alerts (`cscli alerts list`) but never
+# ban anyone. Simulation rather than removing them, because removing a
+# scenario taints its collection and stops it being upgraded.
+simulation: false
+exclusions:
+  # Bans a client that requests many distinct pages quickly. Scrolling an
+  # Immich timeline or an OpenCloud folder of thumbnails is exactly that, and
+  # every one of those pages needs a signed-in session anyway.
+  - crowdsecurity/http-crawl-non_statics

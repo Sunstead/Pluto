@@ -1,0 +1,123 @@
+# Pluto's Caddy: the public edge for *.pwbcloud.com.
+#
+# Each site gets its own Let's Encrypt certificate here (HTTP-01 / TLS-ALPN-01,
+# so Pluto holds no DNS credentials), goes through CrowdSec (the addresses it
+# has decided against, then its AppSec rules), and is proxied to Caddy on
+# Jupiter over the tailnet. Jupiter serves the same names with its own
+# certificate, which is verified here.
+#
+# Adding a public site: a DNS record (docs/RUNBOOK.md), a block below, and a
+# matching route in Jupiter's *.pwbcloud.com site.
+
+{
+    email {$ACME_EMAIL}
+
+    # Caddy runs on the host network, where the admin API on localhost:2019
+    # would let any local process rewrite the config. Deploys restart Caddy
+    # instead of reloading it.
+    admin off
+
+    crowdsec {
+        api_url http://127.0.0.1:8080
+        api_key {$CROWDSEC_BOUNCER_KEY}
+        ticker_interval 15s
+        appsec_url http://127.0.0.1:7422
+        # AppSec reads this much of each request body and the rest streams on
+        # to Jupiter untouched. 0 (the default) would buffer a whole
+        # multi-gigabyte Immich upload in memory before sending it anywhere.
+        appsec_max_body_bytes 1048576
+    }
+
+    servers {
+        protocols h1 h2
+        timeouts {
+            # Clients get 10 s to send their headers. Bodies and responses have
+            # no limit, so long uploads and downloads finish.
+            read_header 10s
+            idle 2m
+        }
+    }
+
+    # Access logs go to a file CrowdSec reads (compose/edge.yml), not to
+    # `docker logs`.
+    log default {
+        output stderr
+        exclude http.log.access
+    }
+    log access {
+        output file /var/log/caddy/access.log {
+            roll_size 50MiB
+            roll_keep 5
+        }
+        format json
+        include http.log.access
+    }
+}
+
+# Everything a public site has in common.
+(edge) {
+    log
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        -Server
+    }
+    # Only when this Caddy can't reach Jupiter; an error from Jupiter's own
+    # Caddy or an app passes through as it is.
+    handle_errors 502 504 {
+        respond "Can't reach the server right now. Try again in a few minutes." 502
+    }
+}
+
+# CrowdSec, then the request goes to Jupiter. The argument is the site's name,
+# which is also the TLS server name for Jupiter's certificate: literal per
+# site, so connections are pooled (a placeholder here would build a new
+# transport for every request). `route` keeps the handlers in this order.
+# Request bodies stream straight through, with no size limit.
+(to_jupiter) {
+    route {
+        crowdsec
+        appsec
+        reverse_proxy {$JUPITER_TS_IP}:443 {
+            transport http {
+                tls
+                tls_server_name {args[0]}
+                dial_timeout 5s
+            }
+        }
+    }
+}
+
+# Authentik: the sign-in page for every app below. The admin interface stays
+# on the tailnet, at auth.jupiter.sunstead.net.
+auth.pwbcloud.com {
+    import edge
+    @admin path /if/admin /if/admin/*
+    handle @admin {
+        respond 403
+    }
+    import to_jupiter auth.pwbcloud.com
+}
+
+# Immich
+photos.pwbcloud.com {
+    import edge
+    import to_jupiter photos.pwbcloud.com
+}
+
+# OpenCloud
+files.pwbcloud.com {
+    import edge
+    import to_jupiter files.pwbcloud.com
+}
+
+# Gitea, over HTTPS only (no SSH).
+git.pwbcloud.com {
+    import edge
+    import to_jupiter git.pwbcloud.com
+}
+
+# Atlas
+atlas.pwbcloud.com {
+    import edge
+    import to_jupiter atlas.pwbcloud.com
+}

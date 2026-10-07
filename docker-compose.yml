@@ -1,0 +1,5 @@
+include:
+  - path: compose/edge.yml
+    project_directory: .
+  - path: compose/cosmos.yml
+    project_directory: .
