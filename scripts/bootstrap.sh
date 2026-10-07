@@ -137,13 +137,16 @@ fi
 tailnet_name="$(tailscale status --json | jq -r '.Self.DNSName' | sed 's/\.$//')"
 
 step "Cosmos agent on the tailnet"
-# HTTPS on the tailnet name, answered inside tailscaled, proxied to the agent
-# on loopback (cosmos-agent.toml). Needs MagicDNS and HTTPS certificates
-# turned on in the Tailscale admin console (DNS page).
-if tailscale serve status 2>/dev/null | grep -q '127.0.0.1:7700'; then
-  echo "Already serving https://$tailnet_name"
+# HTTPS on the tailnet name, port 7700 like any Cosmos agent, proxied to the
+# agent on loopback (cosmos-agent.toml). tailscaled listens on Pluto's
+# Tailscale addresses for it, so it can't take :443: Caddy listens there on
+# every address. Needs MagicDNS and HTTPS certificates turned on in the
+# Tailscale admin console (DNS page).
+if tailscale serve status --json 2>/dev/null | jq -e '(.TCP // {} | keys) == ["7700"]' >/dev/null; then
+  echo "Already serving https://$tailnet_name:7700"
 else
-  tailscale serve --bg --https=443 http://127.0.0.1:7700
+  tailscale serve reset
+  tailscale serve --bg --https=7700 http://127.0.0.1:7700
 fi
 
 step "Firewall"
@@ -182,7 +185,7 @@ cat <<EOF
 Done. Next (README.md):
   1. cp .env.example .env and fill it in
   2. scripts/deploy.sh            (as $ADMIN_USER, after logging in again for the docker group)
-  3. Add https://$tailnet_name in Cosmos
+  3. Add https://$tailnet_name:7700 in Cosmos
 EOF
 if [ -e /run/reboot-required ]; then
   echo "The upgrade wants a reboot (sudo reboot); everything above comes back on its own."

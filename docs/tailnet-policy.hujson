@@ -22,7 +22,7 @@
 
 	"grants": [
 		// Your devices: everything, as before. That includes SSH to Pluto and
-		// its Cosmos agent (https://pluto.<tailnet>.ts.net).
+		// its Cosmos agent (https://pluto.<tailnet>.ts.net:7700).
 		// If you share Jupiter with people outside the tailnet, add
 		// "autogroup:shared" to src, or they lose access.
 		{"src": ["autogroup:member"], "dst": ["*"], "ip": ["*"]},

@@ -26,7 +26,7 @@ internet ──► Pluto :80/:443   nftables: 80, 443/tcp and 41641/udp, nothing
                                  └─► Jupiter's Caddy (*.pwbcloud.com, its own cert) ─► app
 
 your devices ──► tailnet ──► pluto:22                     SSH, keys only
-                         └─► https://pluto.<tailnet>.ts.net   Cosmos agent (tailscale serve)
+                         └─► https://pluto.<tailnet>.ts.net:7700   Cosmos agent (tailscale serve)
 ```
 
 - **TLS ends here**, so CrowdSec can read the requests. Caddy then opens a
@@ -95,7 +95,7 @@ your devices ──► tailnet ──► pluto:22                     SSH, keys 
    ```
 5. **DNS** at Cloudflare: the records in [docs/RUNBOOK.md](docs/RUNBOOK.md#dns).
    Caddy gets each certificate as soon as its name resolves here.
-6. **Cosmos:** Add node `https://pluto.<tailnet>.ts.net`. On Pluto's node, add
+6. **Cosmos:** Add node `https://pluto.<tailnet>.ts.net:7700`. On Pluto's node, add
    HTTP uptime checks for the public names and the ntfy channel.
 
 Rebuilding means doing the same again. Nothing on the old machine needs

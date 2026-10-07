@@ -26,8 +26,10 @@ on Jupiter over the tailnet. `README.md` has the picture and the setup steps,
 - **Nothing listens publicly except Caddy (80/443) and tailscaled (41641/udp).**
   Caddy and the agent use host networking; CrowdSec's ports are published on
   127.0.0.1 only; the agent binds 127.0.0.1:7700 and the tailnet reaches it
-  through `tailscale serve`. A new port is a change to `host/nftables.conf`
-  and the README.
+  through `tailscale serve` on :7700 of Pluto's Tailscale addresses. That
+  listener is a real socket: it can't be :443 (Caddy holds every address
+  there), and nftables has to allow it on `tailscale0`. A new port is a
+  change to `host/nftables.conf` and the README.
 - **`host/nftables.conf` must never `flush ruleset`.** Docker and Tailscale
   keep their own tables; it replaces only `table inet pluto`.
 - **Pluto holds no DNS credentials and no GitHub token.** Certificates come

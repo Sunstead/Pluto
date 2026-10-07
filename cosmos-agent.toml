@@ -12,7 +12,7 @@ allow_actions = true
 
 [server]
 # Loopback only, so nothing on the public interface can reach it, firewall or
-# not. The tailnet reaches it as https://pluto.<tailnet>.ts.net through
+# not. The tailnet reaches it as https://pluto.<tailnet>.ts.net:7700 through
 # `tailscale serve` (scripts/bootstrap.sh), which holds the certificate.
 bind = "127.0.0.1:7700"
 

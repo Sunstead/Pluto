@@ -67,6 +67,31 @@ restart_if_newer caddy ./caddy/Caddyfile
 restart_if_newer cosmos-agent ./cosmos-agent.toml
 restart_if_newer crowdsec ./crowdsec/acquis.d/*.yaml ./crowdsec/parsers/s02-enrich/*.yaml ./crowdsec/simulation.yaml
 
+# `up -d` returns once containers start, so one that crash-loops afterwards
+# (a port already taken, a config it rejects) would still look deployed.
+# Anything not running after 20 s, or restarting meanwhile, fails it here.
+step "Check everything stays up"
+container_states() {
+  local service
+  for service in $(docker compose config --services); do
+    printf '%s %s\n' "$service" \
+      "$(docker inspect -f '{{.State.Status}} {{.RestartCount}}' "$(docker compose ps -aq "$service")")"
+  done
+}
+before="$(container_states)"
+sleep 20
+failed=
+while read -r service status count; do
+  previous="$(awk -v s="$service" '$1 == s { print $3 }' <<<"$before")"
+  if [ "$status" != running ] || [ "$count" != "$previous" ]; then
+    echo "--- $service is $status (restarted $((count - previous)) times in 20 s). Last log lines:"
+    docker compose logs --tail 20 "$service"
+    failed="$failed $service"
+  fi
+done <<<"$(container_states)"
+[ -z "$failed" ] || die "not staying up:$failed"
+echo "All running"
+
 step "Prune old images"
 docker image prune -f
 
