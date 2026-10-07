@@ -25,7 +25,10 @@ ADMIN_USER="${SUDO_USER:-}"
 . /etc/os-release
 [ "${VERSION_CODENAME:-}" = trixie ] || die "expected Debian 13 (trixie), found ${PRETTY_NAME:-unknown}"
 
-export DEBIAN_FRONTEND=noninteractive
+# No prompts: keep any config file the image already changed (dpkg would
+# otherwise stop and ask), and let needrestart restart services itself.
+export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a
+apt_get() { apt-get -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold "$@"; }
 
 # install_if_changed <src> <dest> [mode]: prints "changed" when it wrote the file.
 install_if_changed() {
@@ -37,9 +40,9 @@ install_if_changed() {
 }
 
 step "Packages"
-apt-get update
-apt-get -y full-upgrade
-apt-get install -y ca-certificates curl git jq nftables unattended-upgrades apt-listchanges needrestart
+apt_get update
+apt_get -y full-upgrade
+apt_get install -y ca-certificates curl git jq nftables unattended-upgrades apt-listchanges needrestart
 
 install -d -m 0755 /etc/apt/keyrings
 if [ ! -f /etc/apt/sources.list.d/docker.sources ]; then
@@ -58,8 +61,8 @@ if [ ! -f /etc/apt/sources.list.d/tailscale.list ]; then
   curl -fsSL "https://pkgs.tailscale.com/stable/debian/$VERSION_CODENAME.tailscale-keyring.list" \
     -o /etc/apt/sources.list.d/tailscale.list
 fi
-apt-get update
-apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin tailscale
+apt_get update
+apt_get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin tailscale
 
 step "Host configuration"
 install_if_changed host/sysctl.d/90-pluto.conf /etc/sysctl.d/90-pluto.conf >/dev/null
