@@ -79,6 +79,9 @@
         crowdsec
         appsec
         reverse_proxy {$JUPITER_TS_IP}:443 {
+            # For an HTTPS upstream Caddy would send the upstream's address as
+            # the Host, which matches no site on Jupiter (an empty 200).
+            header_up Host {host}
             transport http {
                 tls
                 tls_server_name {args[0]}
