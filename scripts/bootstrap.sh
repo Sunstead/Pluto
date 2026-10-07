@@ -9,7 +9,18 @@
 # joining the tailnet, the Cosmos agent's tailnet address, and last the
 # firewall, which takes itself back out unless you confirm you can still get
 # in over the tailnet. README.md has the steps around it.
+#
+#   sudo scripts/bootstrap.sh --prepare
+# stops before the console password: everything up to there needs no input,
+# so the machine can be got ready ahead of time without anyone's secrets.
 set -euo pipefail
+
+prepare_only=
+case "${1:-}" in
+  --prepare) prepare_only=1 ;;
+  "") ;;
+  *) echo "usage: $0 [--prepare]" >&2; exit 2 ;;
+esac
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
@@ -88,6 +99,13 @@ id -nG "$ADMIN_USER" | grep -qw sudo || usermod -aG sudo "$ADMIN_USER"
 install_if_changed host/sshd_config.d/10-pluto.conf /etc/ssh/sshd_config.d/10-pluto.conf >/dev/null
 sshd -t
 systemctl reload ssh
+
+if [ -n "$prepare_only" ]; then
+  echo
+  echo "Prepared. The rest needs you: sudo scripts/bootstrap.sh"
+  [ ! -e /run/reboot-required ] || echo "The upgrade wants a reboot first (sudo reboot)."
+  exit 0
+fi
 
 step "Console password"
 # Cloud images lock the account's password. SSH never accepts one; this is

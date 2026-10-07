@@ -19,7 +19,6 @@ services:
     # No `ports:`; nftables (host/nftables.conf) decides what is reachable.
     network_mode: host
     environment:
-      ACME_EMAIL: ${ACME_EMAIL}
       JUPITER_TS_IP: ${JUPITER_TS_IP}
       CROWDSEC_BOUNCER_KEY: ${CROWDSEC_BOUNCER_KEY}
     volumes:

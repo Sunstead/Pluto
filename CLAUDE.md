@@ -62,6 +62,9 @@ on Jupiter over the tailnet. `README.md` has the picture and the setup steps,
 - Bind-mounted config is read at startup; `deploy.sh` restarts a service
   whose file is newer than its container. A new bind-mounted file needs
   adding to its `restart_if_newer` line.
+- **This repository is public** (`Sunstead/Pluto`). Nothing in it may be
+  secret, and it shouldn't say more about the setup than DNS and the tailnet
+  policy already do.
 - Never run commands against the server without explicit confirmation. Write
   the steps up first.
 - Shell scripts: `set -euo pipefail`, and every step is safe to re-run.

@@ -4,8 +4,8 @@
 #   scripts/deploy.sh
 #
 # The same steps as Jupiter's deploy workflow (.github/workflows/_deploy.yml
-# there), by hand: Pluto runs no CI runner, so the internet-facing box holds
-# no GitHub credential beyond this repository's read-only deploy key.
+# there), by hand: Pluto runs no CI runner, and the repository is public, so
+# the internet-facing box holds no GitHub credential at all.
 set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."

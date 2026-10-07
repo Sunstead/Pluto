@@ -77,11 +77,12 @@ your devices ──► tailnet ──► pluto:22                     SSH, keys 
    ```bash
    sudo apt-get update && sudo apt-get install -y git
    sudo install -d -o "$USER" -g "$USER" /opt/pluto
-   git clone <this repository> /opt/pluto   # read-only deploy key; or a git bundle copied over
+   git clone https://github.com/Sunstead/Pluto.git /opt/pluto
    cd /opt/pluto
    sudo scripts/bootstrap.sh
    ```
-   It asks for the auth key and a console password, and finally has you
+   (`sudo scripts/bootstrap.sh --prepare` first does everything that needs
+   no input, if someone else is getting the machine ready.) It asks for the auth key and a console password, and finally has you
    confirm the firewall from a second SSH session over the tailnet
    (`ssh -t <you>@pluto sudo touch /run/pluto-firewall-ok`). Public SSH is
    closed from then on. Check `tailscale ping jupiter` reports a direct

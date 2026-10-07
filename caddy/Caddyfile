@@ -10,7 +10,8 @@
 # matching route in Jupiter's *.pwbcloud.com site.
 
 {
-    email {$ACME_EMAIL}
+    # No ACME email: Let's Encrypt no longer mails expiry warnings, and
+    # Cosmos's uptime checks on Pluto warn about a certificate near its end.
 
     # Caddy runs on the host network, where the admin API on localhost:2019
     # would let any local process rewrite the config. Deploys restart Caddy

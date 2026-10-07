@@ -17,7 +17,7 @@
 	"hosts": {
 		// Jupiter's Tailscale IPv4: `tailscale ip -4 jupiter`. The same value
 		// as JUPITER_TS_IP in Pluto's .env.
-		"jupiter": "100.64.0.1",
+		"jupiter": "100.93.232.37",
 	},
 
 	"grants": [
