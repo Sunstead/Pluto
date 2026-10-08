@@ -12,8 +12,9 @@ Everything here can be rebuilt from this repository.
 | `files.pwbcloud.com` | OpenCloud |
 | `git.pwbcloud.com` | Gitea (HTTPS only) |
 | `atlas.pwbcloud.com` | Atlas |
+| `notes.pwbcloud.com` | Solstice: the web app and the desktop apps' sync |
 
-Cosmos, ntfy and Solstice are not public; they stay on `*.jupiter.sunstead.net`,
+Cosmos and ntfy are not public; they stay on `*.jupiter.sunstead.net`,
 tailnet only.
 
 ## How a request gets in

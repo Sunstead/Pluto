@@ -69,25 +69,31 @@
     }
 }
 
-# CrowdSec, then the request goes to Jupiter. The argument is the site's name,
-# which is also the TLS server name for Jupiter's certificate: literal per
-# site, so connections are pooled (a placeholder here would build a new
-# transport for every request). `route` keeps the handlers in this order.
-# Request bodies stream straight through, with no size limit.
+# The proxy to Jupiter. The argument is the site's name, which is also the TLS
+# server name for Jupiter's certificate: literal per site, so connections are
+# pooled (a placeholder here would build a new transport for every request).
+# Request bodies stream straight through, with no size limit, and WebSockets
+# pass through (Caddy upgrades them over HTTP/1.1 to Jupiter).
+(jupiter) {
+    reverse_proxy {$JUPITER_TS_IP}:443 {
+        # For an HTTPS upstream Caddy would send the upstream's address as
+        # the Host, which matches no site on Jupiter (an empty 200).
+        header_up Host {host}
+        transport http {
+            tls
+            tls_server_name {args[0]}
+            dial_timeout 5s
+        }
+    }
+}
+
+# CrowdSec, then the request goes to Jupiter. `route` keeps the handlers in
+# this order.
 (to_jupiter) {
     route {
         crowdsec
         appsec
-        reverse_proxy {$JUPITER_TS_IP}:443 {
-            # For an HTTPS upstream Caddy would send the upstream's address as
-            # the Host, which matches no site on Jupiter (an empty 200).
-            header_up Host {host}
-            transport http {
-                tls
-                tls_server_name {args[0]}
-                dial_timeout 5s
-            }
-        }
+        import jupiter {args[0]}
     }
 }
 
@@ -124,4 +130,20 @@ git.pwbcloud.com {
 atlas.pwbcloud.com {
     import edge
     import to_jupiter atlas.pwbcloud.com
+}
+
+# Solstice: the web app, and the desktop apps' sync (a WebSocket on /v1/sync).
+notes.pwbcloud.com {
+    import edge
+    # No AppSec on the API. Its rules look for exploits of software that
+    # doesn't run here, and they read request bodies, which on /v1 are
+    # people's notes: a note quoting an exploit would be blocked as one, and
+    # two such notes ban the writer. Every /v1 route needs a sign-in anyway.
+    # CrowdSec's decisions still apply to everything.
+    @not_api not path /v1/*
+    route {
+        crowdsec
+        appsec @not_api
+        import jupiter notes.pwbcloud.com
+    }
 }

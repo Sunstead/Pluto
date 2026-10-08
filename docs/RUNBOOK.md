@@ -9,8 +9,8 @@ Cloudflare's proxy would end TLS before Pluto and cap uploads at 100 MB.
 
 | Type | Name | Value |
 | --- | --- | --- |
-| A | `auth`, `photos`, `files`, `git`, `atlas` | Pluto's IPv4 |
-| AAAA | the same five | Pluto's IPv6, once `curl -6 https://photos.pwbcloud.com` works from a v6 network |
+| A | `auth`, `photos`, `files`, `git`, `atlas`, `notes` | Pluto's IPv4 |
+| AAAA | the same six | Pluto's IPv6, once `curl -6 https://photos.pwbcloud.com` works from a v6 network |
 | CAA | `@` | `0 issue "letsencrypt.org"` |
 | CAA | `@` | `0 issuewild "letsencrypt.org"` (Jupiter's wildcard) |
 
