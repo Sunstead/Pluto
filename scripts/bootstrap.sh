@@ -80,9 +80,9 @@ install_if_changed host/sysctl.d/90-pluto.conf /etc/sysctl.d/90-pluto.conf >/dev
 sysctl --quiet --system
 install_if_changed host/apt.conf.d/52pluto-unattended /etc/apt/apt.conf.d/52pluto-unattended >/dev/null
 install_if_changed host/needrestart/pluto.conf /etc/needrestart/conf.d/pluto.conf >/dev/null
-if [ -n "$(install_if_changed host/nftables.service.d/pluto.conf /etc/systemd/system/nftables.service.d/pluto.conf)" ]; then
-  systemctl daemon-reload
-fi
+units_changed="$(install_if_changed host/nftables.service.d/pluto.conf /etc/systemd/system/nftables.service.d/pluto.conf)"
+units_changed+="$(install_if_changed host/tailscaled.service.d/pluto.conf /etc/systemd/system/tailscaled.service.d/pluto.conf)"
+[ -z "$units_changed" ] || systemctl daemon-reload
 if [ -n "$(install_if_changed host/docker/daemon.json /etc/docker/daemon.json)" ]; then
   systemctl restart docker
 fi
