@@ -4,6 +4,7 @@
 # agent, so one session in the app covers both nodes. Nothing secret is here.
 
 node_name = "pluto"
+node_description = "Public edge"
 
 # Same as Jupiter: admins can start, stop and restart containers from the app.
 # The agent always refuses to act on its own container. Must sit above the
@@ -102,3 +103,13 @@ min_age_days = 3
 # Settings edited from the UI, and the event log. Must be on the writable
 # volume.
 path = "/var/lib/cosmos-agent/state.db"
+
+# Jupiter's agent, which this one watches and is watched by: each reports the
+# other when it stops answering. This side sends the heartbeats, through
+# Jupiter's Caddy on jupiter:443 (the one address the tailnet policy lets
+# Pluto reach); Jupiter can't reach Pluto. The shared secret is
+# COSMOS_AGENT_PEER_TOKEN, from .env. Uptime checks of the public names
+# should say they go through jupiter, so Jupiter going down is one alert.
+[[peers]]
+name = "jupiter"
+url = "https://cosmos.jupiter.sunstead.net"

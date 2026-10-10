@@ -3,7 +3,7 @@ services:
     # Pinned to the same release as Jupiter's (Jupiter/compose/cosmos.yml):
     # each release pairs with its cosmos-agent.toml, and a newer or older agent
     # refuses a config it does not understand. Bump both together.
-    image: ghcr.io/sunstead/cosmos-agent:0.10.0
+    image: ghcr.io/sunstead/cosmos-agent:0.11.0
     container_name: cosmos-agent
     restart: unless-stopped
 
@@ -21,6 +21,10 @@ services:
     environment:
       COSMOS_AGENT_CONFIG: /etc/cosmos-agent/agent.toml
       COSMOS_NODE_NAME: pluto
+      # The secret sent with its heartbeats to Jupiter's agent ([[peers]] in
+      # cosmos-agent.toml). Compose refuses to start without it, before the
+      # agent would.
+      COSMOS_AGENT_PEER_TOKEN: ${COSMOS_AGENT_PEER_TOKEN:?set COSMOS_AGENT_PEER_TOKEN in .env, the same value as Jupiter's}
       RUST_LOG: "info,cosmos_agent=info"
       TZ: ${TZ:-Etc/UTC}
 
