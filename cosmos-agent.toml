@@ -77,8 +77,9 @@ interval_ms = 10000
 enabled = false
 
 [events]
-# Notification channels (ntfy on Jupiter, which Pluto reaches over the
-# tailnet) are added in the app, not here.
+# Notification channels are added in the app, not here: ntfy runs on this
+# machine (compose/notify.yml), so the channel's server is
+# http://127.0.0.1:2586, topic cosmos-pluto.
 enabled = true
 retain_days = 180
 disk_warn_pct = 85

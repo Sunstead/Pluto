@@ -6,14 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Pluto is the public edge for the homelab: an OVH VPS (Debian 13) that answers
 for `*.pwbcloud.com`, filters traffic with CrowdSec, and proxies it to Caddy
-on Jupiter over the tailnet. `README.md` has the picture and the setup steps,
+on Jupiter over the tailnet. It also runs ntfy (`ntfy.pwbcloud.com`) for both
+nodes' Cosmos agents, so an alert about Jupiter has somewhere to go. `README.md` has the picture and the setup steps,
 `docs/RUNBOOK.md` the operations. Jupiter (`Sunstead/Jupiter`) and Cosmos
 (`Sunstead/Cosmos`) are usually checked out beside this repo.
 
 - `docker-compose.yml` only `include`s `compose/*.yml`: `edge.yml` (Caddy,
-  CrowdSec) and `cosmos.yml` (the Cosmos agent).
+  CrowdSec), `cosmos.yml` (the Cosmos agent) and `notify.yml` (ntfy).
 - `caddy/Caddyfile` has one site per public name, each `import edge` +
-  `import to_jupiter <name>`. Caddy is built here (`caddy/Dockerfile`) with
+  `import to_jupiter <name>`, except `ntfy.pwbcloud.com`, which proxies to
+  ntfy on 127.0.0.1:2586 here. Caddy is built here (`caddy/Dockerfile`) with
   CrowdSec's `http` and `appsec` modules.
 - `host/` is the machine's own config (nftables, sshd, sysctl, Docker, apt),
   installed by `scripts/bootstrap.sh`. `scripts/deploy.sh` deploys the stack.
@@ -24,8 +26,8 @@ on Jupiter over the tailnet. `README.md` has the picture and the setup steps,
 ## Security model (don't weaken it by accident)
 
 - **Nothing listens publicly except Caddy (80/443) and tailscaled (41641/udp).**
-  Caddy and the agent use host networking; CrowdSec's ports are published on
-  127.0.0.1 only; the agent binds 127.0.0.1:7700 and the tailnet reaches it
+  Caddy and the agent use host networking; CrowdSec's and ntfy's ports are
+  published on 127.0.0.1 only; the agent binds 127.0.0.1:7700 and the tailnet reaches it
   through `tailscale serve` on :7700 of Pluto's Tailscale addresses. That
   listener is a real socket: it can't be :443 (Caddy holds every address
   there), and nftables has to allow it on `tailscale0`. A new port is a

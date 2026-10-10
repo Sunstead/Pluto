@@ -28,8 +28,8 @@
 		{"src": ["autogroup:member"], "dst": ["*"], "ip": ["*"]},
 
 		// Pluto: Jupiter's Caddy only. The public sites, plus Pluto's Cosmos
-		// agent fetching Authentik's keys and posting to ntfy, all go
-		// through it.
+		// agent fetching Authentik's keys, all go through it. (ntfy runs on
+		// Pluto itself.)
 		{"src": ["tag:pluto"], "dst": ["jupiter"], "ip": ["tcp:443"]},
 	],
 
