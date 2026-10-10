@@ -1,25 +1,25 @@
 # Pluto
 
 The public edge for the homelab. A small OVH VPS (Debian 13) that answers for
-`*.pwbcloud.com`, filters what comes in, and forwards the rest to Jupiter over
+`*.$PUBLIC_DOMAIN`, filters what comes in, and forwards the rest to Jupiter over
 the tailnet. It also runs ntfy, so notifications reach the phone even when
 Jupiter can't. The home connection never appears in DNS and has no open ports.
 Everything here can be rebuilt from this repository.
 
 | Public name | App on Jupiter |
 | --- | --- |
-| `auth.pwbcloud.com` | Authentik, the sign-in for the rest (admin UI blocked; it stays on the tailnet) |
-| `photos.pwbcloud.com` | Immich |
-| `files.pwbcloud.com` | OpenCloud |
-| `git.pwbcloud.com` | Gitea (HTTPS only) |
-| `atlas.pwbcloud.com` | Atlas |
-| `notes.pwbcloud.com` | Solstice: the web app and the desktop apps' sync |
+| `auth.$PUBLIC_DOMAIN` | Authentik, the sign-in for the rest (admin UI blocked; it stays on the tailnet) |
+| `photos.$PUBLIC_DOMAIN` | Immich |
+| `files.$PUBLIC_DOMAIN` | OpenCloud |
+| `git.$PUBLIC_DOMAIN` | Gitea (HTTPS only) |
+| `atlas.$PUBLIC_DOMAIN` | Atlas |
+| `notes.$PUBLIC_DOMAIN` | Solstice: the web app and the desktop apps' sync |
 
 | Public name | Served here |
 | --- | --- |
-| `ntfy.pwbcloud.com` | ntfy, push notifications from both Cosmos agents to the phone |
+| `ntfy.$PUBLIC_DOMAIN` | ntfy, push notifications from both Cosmos agents to the phone |
 
-Cosmos is not public; it stays on `*.jupiter.sunstead.net`, tailnet only.
+Cosmos is not public; it stays on `*.$HOME_DOMAIN`, tailnet only.
 
 **Why ntfy is here, not on Jupiter:** a notification that Jupiter is down
 (or that the house lost power) needs a server that isn't Jupiter, and the
@@ -35,8 +35,8 @@ internet ──► Pluto :80/:443   nftables: 80, 443/tcp and 41641/udp, nothing
              Caddy            TLS for the public name (its own Let's Encrypt cert)
                ├─ CrowdSec    banned address? → 403. AppSec rule matches? → 403.
                ├─ proxy ──────► tailnet (Pluto may reach jupiter:443 and nothing else)
-               │                 └─► Jupiter's Caddy (*.pwbcloud.com, its own cert) ─► app
-               └─ ntfy.pwbcloud.com ─► ntfy on 127.0.0.1:2586 (this machine)
+               │                 └─► Jupiter's Caddy (*.$PUBLIC_DOMAIN, its own cert) ─► app
+               └─ ntfy.$PUBLIC_DOMAIN ─► ntfy on 127.0.0.1:2586 (this machine)
 
 your devices ──► tailnet ──► pluto:22                     SSH, keys only
                          └─► https://pluto.<tailnet>.ts.net:7700   Cosmos agent (tailscale serve)
@@ -111,10 +111,10 @@ your devices ──► tailnet ──► pluto:22                     SSH, keys 
 6. **Cosmos:** Add node `https://pluto.<tailnet>.ts.net:7700`. On Pluto's node, add
    HTTP uptime checks for the public names, and an ntfy channel: server
    `http://127.0.0.1:2586`, topic `cosmos-pluto`, token `NTFY_PLUTO_TOKEN`.
-   Jupiter's channel uses `https://ntfy.pwbcloud.com`, topic `cosmos-jupiter`,
+   Jupiter's channel uses `https://ntfy.$PUBLIC_DOMAIN`, topic `cosmos-jupiter`,
    token `NTFY_JUPITER_TOKEN`.
 7. **Phone:** in the ntfy app, add the user `phone` on server
-   `https://ntfy.pwbcloud.com`, and subscribe to `cosmos-jupiter` and
+   `https://ntfy.$PUBLIC_DOMAIN`, and subscribe to `cosmos-jupiter` and
    `cosmos-pluto` there.
 
 Rebuilding means doing the same again. Nothing on the old machine needs

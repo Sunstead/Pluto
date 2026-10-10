@@ -1,4 +1,4 @@
-# Pluto's Caddy: the public edge for *.pwbcloud.com.
+# Pluto's Caddy: the public edge for *.{$PUBLIC_DOMAIN}.
 #
 # Each site gets its own Let's Encrypt certificate here (HTTP-01 / TLS-ALPN-01,
 # so Pluto holds no DNS credentials), goes through CrowdSec (the addresses it
@@ -7,7 +7,7 @@
 # certificate, which is verified here.
 #
 # Adding a public site: a DNS record (docs/RUNBOOK.md), a block below, and a
-# matching route in Jupiter's *.pwbcloud.com site.
+# matching route in Jupiter's *.{$PUBLIC_DOMAIN} site.
 
 {
     # No ACME email: Let's Encrypt no longer mails expiry warnings, and
@@ -98,42 +98,42 @@
 }
 
 # Authentik: the sign-in page for every app below. The admin interface stays
-# on the tailnet, at auth.jupiter.sunstead.net.
-auth.pwbcloud.com {
+# on the tailnet, at auth.{$HOME_DOMAIN}.
+auth.{$PUBLIC_DOMAIN} {
     import edge
     @admin path /if/admin /if/admin/*
     handle @admin {
         respond 403
     }
-    import to_jupiter auth.pwbcloud.com
+    import to_jupiter auth.{$PUBLIC_DOMAIN}
 }
 
 # Immich
-photos.pwbcloud.com {
+photos.{$PUBLIC_DOMAIN} {
     import edge
-    import to_jupiter photos.pwbcloud.com
+    import to_jupiter photos.{$PUBLIC_DOMAIN}
 }
 
 # OpenCloud
-files.pwbcloud.com {
+files.{$PUBLIC_DOMAIN} {
     import edge
-    import to_jupiter files.pwbcloud.com
+    import to_jupiter files.{$PUBLIC_DOMAIN}
 }
 
 # Gitea, over HTTPS only (no SSH).
-git.pwbcloud.com {
+git.{$PUBLIC_DOMAIN} {
     import edge
-    import to_jupiter git.pwbcloud.com
+    import to_jupiter git.{$PUBLIC_DOMAIN}
 }
 
 # Atlas
-atlas.pwbcloud.com {
+atlas.{$PUBLIC_DOMAIN} {
     import edge
-    import to_jupiter atlas.pwbcloud.com
+    import to_jupiter atlas.{$PUBLIC_DOMAIN}
 }
 
 # Solstice: the web app, and the desktop apps' sync (a WebSocket on /v1/sync).
-notes.pwbcloud.com {
+notes.{$PUBLIC_DOMAIN} {
     import edge
     # No AppSec on the API. Its rules look for exploits of software that
     # doesn't run here, and they read request bodies, which on /v1 are
@@ -144,14 +144,14 @@ notes.pwbcloud.com {
     route {
         crowdsec
         appsec @not_api
-        import jupiter notes.pwbcloud.com
+        import jupiter notes.{$PUBLIC_DOMAIN}
     }
 }
 
 # ntfy: the one site served here rather than on Jupiter (compose/notify.yml),
 # so a notification that Jupiter is down still has somewhere to go. CrowdSec
 # and AppSec as for the rest; publishes are small JSON bodies.
-ntfy.pwbcloud.com {
+ntfy.{$PUBLIC_DOMAIN} {
     import edge
     route {
         crowdsec

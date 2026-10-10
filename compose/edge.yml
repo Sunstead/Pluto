@@ -1,4 +1,4 @@
-# The public edge. Caddy terminates TLS for *.pwbcloud.com and proxies each
+# The public edge. Caddy terminates TLS for *.${PUBLIC_DOMAIN} and proxies each
 # site to Caddy on Jupiter over the tailnet; CrowdSec decides who gets that
 # far (docs/RUNBOOK.md for operating it).
 volumes:
@@ -21,6 +21,10 @@ services:
     environment:
       JUPITER_TS_IP: ${JUPITER_TS_IP}
       CROWDSEC_BOUNCER_KEY: ${CROWDSEC_BOUNCER_KEY}
+      # The names Caddy serves ({$PUBLIC_DOMAIN}) and Jupiter's own
+      # ({$HOME_DOMAIN}); nothing starts without them (.env.example).
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN in .env}
+      HOME_DOMAIN: ${HOME_DOMAIN:?set HOME_DOMAIN in .env}
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data                  # certificates and ACME account

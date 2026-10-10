@@ -1,4 +1,4 @@
-# ntfy: push notifications for the phone, public at ntfy.pwbcloud.com. Both
+# ntfy: push notifications for the phone, public at ntfy.${PUBLIC_DOMAIN}. Both
 # Cosmos agents publish to it: Pluto's straight to 127.0.0.1:2586, Jupiter's
 # over the internet through Caddy. It lives here rather than on Jupiter so
 # that Jupiter going down (or the house losing power) can still be reported,
@@ -10,7 +10,7 @@ services:
     image: binwiederhier/ntfy:v2.28.0
     command: serve
     environment:
-      NTFY_BASE_URL: https://ntfy.pwbcloud.com
+      NTFY_BASE_URL: https://ntfy.${PUBLIC_DOMAIN}
       # iOS only delivers instantly through Apple's push service, which a
       # self-hosted server reaches via ntfy.sh. ntfy.sh gets a message ID and
       # nothing else; the phone then fetches the message from here.
@@ -51,4 +51,4 @@ services:
     labels:
       cosmos.service: system
       cosmos.service.description: Push notifications for the phone
-      cosmos.service.url: https://ntfy.pwbcloud.com
+      cosmos.service.url: https://ntfy.${PUBLIC_DOMAIN}
