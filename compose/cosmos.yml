@@ -3,7 +3,7 @@ services:
     # Pinned to the same release as Jupiter's (Jupiter/compose/cosmos.yml):
     # each release pairs with its cosmos-agent.toml, and a newer or older agent
     # refuses a config it does not understand. Bump both together.
-    image: ghcr.io/sunstead/cosmos-agent:0.11.0
+    image: ghcr.io/sunstead/cosmos-agent:0.12.0
     container_name: cosmos-agent
     restart: unless-stopped
 
@@ -21,6 +21,8 @@ services:
     environment:
       COSMOS_AGENT_CONFIG: /etc/cosmos-agent/agent.toml
       COSMOS_NODE_NAME: pluto
+      # Named as ${HOME_DOMAIN} in cosmos-agent.toml (agent 0.12 and later).
+      HOME_DOMAIN: ${HOME_DOMAIN}
       # The secret sent with its heartbeats to Jupiter's agent ([[peers]] in
       # cosmos-agent.toml). Compose refuses to start without it, before the
       # agent would.

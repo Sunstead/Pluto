@@ -5,8 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Overview
 
 Pluto is the public edge for the homelab: an OVH VPS (Debian 13) that answers
-for `*.pwbcloud.com`, filters traffic with CrowdSec, and proxies it to Caddy
-on Jupiter over the tailnet. It also runs ntfy (`ntfy.pwbcloud.com`) for both
+for `*.$PUBLIC_DOMAIN`, filters traffic with CrowdSec, and proxies it to Caddy
+on Jupiter over the tailnet. It also runs ntfy (`ntfy.$PUBLIC_DOMAIN`) for both
 nodes' Cosmos agents, so an alert about Jupiter has somewhere to go. `README.md` has the picture and the setup steps,
 `docs/RUNBOOK.md` the operations. Jupiter (`Sunstead/Jupiter`) and Cosmos
 (`Sunstead/Cosmos`) are usually checked out beside this repo.
@@ -14,7 +14,7 @@ nodes' Cosmos agents, so an alert about Jupiter has somewhere to go. `README.md`
 - `docker-compose.yml` only `include`s `compose/*.yml`: `edge.yml` (Caddy,
   CrowdSec), `cosmos.yml` (the Cosmos agent) and `notify.yml` (ntfy).
 - `caddy/Caddyfile` has one site per public name, each `import edge` +
-  `import to_jupiter <name>`, except `ntfy.pwbcloud.com`, which proxies to
+  `import to_jupiter <name>`, except `ntfy.$PUBLIC_DOMAIN`, which proxies to
   ntfy on 127.0.0.1:2586 here. Caddy is built here (`caddy/Dockerfile`) with
   CrowdSec's `http` and `appsec` modules.
 - `host/` is the machine's own config (nftables, sshd, sysctl, Docker, apt),
@@ -22,6 +22,11 @@ nodes' Cosmos agents, so an alert about Jupiter has somewhere to go. `README.md`
 - `docs/tailnet-policy.hujson` mirrors the live tailnet policy in the
   Tailscale admin console. It's the reason a compromised Pluto can only reach
   `jupiter:443`.
+- **No real domain or address is in this repo** (it's public): `.env` holds
+  `PUBLIC_DOMAIN` (the zone served here) and `HOME_DOMAIN` (Jupiter's
+  tailnet zone), read by Compose (`${...}`), the Caddyfile (`{$...}`) and the
+  agent's config (`${...}`, agent 0.12+). Docs write names as
+  `photos.$PUBLIC_DOMAIN`; the tailnet policy's IP is a placeholder.
 
 ## Security model (don't weaken it by accident)
 

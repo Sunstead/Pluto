@@ -10,6 +10,8 @@ whitelist:
   expression:
     # OpenCloud's desktop and mobile clients sync over WebDAV: PROPFIND and
     # friends on paths that may not exist yet, which reads as probing.
+    # Matched by the first label: Caddy only serves names under PUBLIC_DOMAIN,
+    # which lives in .env.
     - >-
-      evt.Meta.target_fqdn == 'files.pwbcloud.com' &&
+      evt.Meta.target_fqdn startsWith 'files.' &&
       evt.Meta.http_verb in ['PROPFIND', 'PROPPATCH', 'REPORT', 'MKCOL', 'MOVE', 'COPY', 'LOCK', 'UNLOCK']

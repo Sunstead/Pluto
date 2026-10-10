@@ -4,22 +4,22 @@ Commands run on Pluto from `/opt/pluto` unless they say otherwise.
 
 ## DNS
 
-`pwbcloud.com` is on Cloudflare. Every record is **DNS only** (grey cloud):
+`$PUBLIC_DOMAIN` is on Cloudflare. Every record is **DNS only** (grey cloud):
 Cloudflare's proxy would end TLS before Pluto and cap uploads at 100 MB.
 
 | Type | Name | Value |
 | --- | --- | --- |
 | A | `auth`, `photos`, `files`, `git`, `atlas`, `notes`, `ntfy` | Pluto's IPv4 |
-| AAAA | the same seven | Pluto's IPv6, once `curl -6 https://photos.pwbcloud.com` works from a v6 network |
+| AAAA | the same seven | Pluto's IPv6, once `curl -6 https://photos.$PUBLIC_DOMAIN` works from a v6 network |
 | CAA | `@` | `0 issue "letsencrypt.org"` |
 | CAA | `@` | `0 issuewild "letsencrypt.org"` (Jupiter's wildcard) |
 
 No wildcard record: a name only resolves once it's meant to be public.
-Jupiter's own `*.pwbcloud.com` certificate comes from a DNS-01 challenge with
-its Cloudflare token, which needs **Zone > DNS > Edit** on `pwbcloud.com` too.
+Jupiter's own `*.$PUBLIC_DOMAIN` certificate comes from a DNS-01 challenge with
+its Cloudflare token, which needs **Zone > DNS > Edit** on `$PUBLIC_DOMAIN` too.
 
 A new public site: the record here, a block in `caddy/Caddyfile`, and a route
-in Jupiter's `*.pwbcloud.com` site (except ntfy, which is served here).
+in Jupiter's `*.$PUBLIC_DOMAIN` site (except ntfy, which is served here).
 
 ## CrowdSec
 
@@ -74,9 +74,10 @@ get an error instead of passing unchecked. `docker compose ps` and
 ## Is the tunnel healthy?
 
 ```bash
+PUBLIC_DOMAIN=$(sed -n 's/^PUBLIC_DOMAIN=//p' .env)
 tailscale status
 tailscale ping jupiter             # "via <ip>:<port>" is direct; "via DERP" is a slow relay
-curl -sI --resolve photos.pwbcloud.com:443:$(sed -n 's/^JUPITER_TS_IP=//p' .env) https://photos.pwbcloud.com
+curl -sI --resolve photos.$PUBLIC_DOMAIN:443:$(sed -n 's/^JUPITER_TS_IP=//p' .env) https://photos.$PUBLIC_DOMAIN
 ```
 
 The last one goes straight to Jupiter's Caddy, skipping Pluto's. If it works
@@ -88,9 +89,10 @@ Pluto shouldn't be able to reach anything else on Jupiter. This should time out:
 ## Notifications (ntfy)
 
 ```bash
+PUBLIC_DOMAIN=$(sed -n 's/^PUBLIC_DOMAIN=//p' .env)
 docker compose ps ntfy                                   # healthy?
 docker compose logs --tail 50 ntfy
-curl -s https://ntfy.pwbcloud.com/v1/health              # through Caddy and CrowdSec
+curl -s https://ntfy.$PUBLIC_DOMAIN/v1/health            # through Caddy and CrowdSec
 ```
 
 - **Send test** on a channel in Cosmos (Settings > Notifications) reports the

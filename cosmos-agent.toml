@@ -24,17 +24,17 @@ allow_query_token = true
 allow_anonymous = false
 
 [auth.oidc]
-# Fetched over the tailnet: auth.jupiter.sunstead.net resolves to Jupiter's
+# Fetched over the tailnet: auth.${HOME_DOMAIN} resolves to Jupiter's
 # Tailscale IP, and the tailnet policy lets Pluto reach jupiter:443 (and
 # nothing else).
-issuer = "https://auth.jupiter.sunstead.net/application/o/cosmos/"
+issuer = "https://auth.${HOME_DOMAIN}/application/o/cosmos/"
 client_id = "cosmos"
 admin_groups = ["homelab-admins"]
 
 [cors]
 # The web UI comes from Jupiter's agent, so it calls this one cross-origin.
 # The desktop app's origins are built in.
-extra_origins = ["https://cosmos.jupiter.sunstead.net"]
+extra_origins = ["https://cosmos.${HOME_DOMAIN}"]
 
 [host]
 interval_ms = 1000
@@ -112,4 +112,4 @@ path = "/var/lib/cosmos-agent/state.db"
 # should say they go through jupiter, so Jupiter going down is one alert.
 [[peers]]
 name = "jupiter"
-url = "https://cosmos.jupiter.sunstead.net"
+url = "https://cosmos.${HOME_DOMAIN}"
