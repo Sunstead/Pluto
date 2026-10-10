@@ -9,8 +9,8 @@ Cloudflare's proxy would end TLS before Pluto and cap uploads at 100 MB.
 
 | Type | Name | Value |
 | --- | --- | --- |
-| A | `auth`, `photos`, `files`, `git`, `atlas`, `notes` | Pluto's IPv4 |
-| AAAA | the same six | Pluto's IPv6, once `curl -6 https://photos.pwbcloud.com` works from a v6 network |
+| A | `auth`, `photos`, `files`, `git`, `atlas`, `notes`, `ntfy` | Pluto's IPv4 |
+| AAAA | the same seven | Pluto's IPv6, once `curl -6 https://photos.pwbcloud.com` works from a v6 network |
 | CAA | `@` | `0 issue "letsencrypt.org"` |
 | CAA | `@` | `0 issuewild "letsencrypt.org"` (Jupiter's wildcard) |
 
@@ -19,7 +19,7 @@ Jupiter's own `*.pwbcloud.com` certificate comes from a DNS-01 challenge with
 its Cloudflare token, which needs **Zone > DNS > Edit** on `pwbcloud.com` too.
 
 A new public site: the record here, a block in `caddy/Caddyfile`, and a route
-in Jupiter's `*.pwbcloud.com` site.
+in Jupiter's `*.pwbcloud.com` site (except ntfy, which is served here).
 
 ## CrowdSec
 
@@ -84,6 +84,24 @@ but the public name doesn't, the problem is on Pluto.
 
 Pluto shouldn't be able to reach anything else on Jupiter. This should time out:
 `curl -m 5 http://$(sed -n 's/^JUPITER_TS_IP=//p' .env):7700/healthz`
+
+## Notifications (ntfy)
+
+```bash
+docker compose ps ntfy                                   # healthy?
+docker compose logs --tail 50 ntfy
+curl -s https://ntfy.pwbcloud.com/v1/health              # through Caddy and CrowdSec
+```
+
+- **Send test** on a channel in Cosmos (Settings > Notifications) reports the
+  error at once: `HTTP 403` is the token or the ACL, `couldn't connect` the
+  address.
+- **The phone stops getting them:** a wrong password in the ntfy app gets 401s,
+  and enough of those look like brute force to CrowdSec. Check
+  `cscli decisions list` for the phone's address before anything else.
+- **Rotating a secret:** change it in `.env` and `scripts/deploy.sh` (or
+  `docker compose up -d --force-recreate ntfy`); ntfy re-applies the accounts
+  on start. Then update the token in that node's Cosmos channel.
 
 ## Can't get in
 

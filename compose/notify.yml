@@ -1,0 +1,54 @@
+# ntfy: push notifications for the phone, public at ntfy.pwbcloud.com. Both
+# Cosmos agents publish to it: Pluto's straight to 127.0.0.1:2586, Jupiter's
+# over the internet through Caddy. It lives here rather than on Jupiter so
+# that Jupiter going down (or the house losing power) can still be reported,
+# and so the phone doesn't need the tailnet to read a message.
+volumes:
+  ntfy_data:
+services:
+  ntfy:
+    image: binwiederhier/ntfy:v2.28.0
+    command: serve
+    environment:
+      NTFY_BASE_URL: https://ntfy.pwbcloud.com
+      # iOS only delivers instantly through Apple's push service, which a
+      # self-hosted server reaches via ntfy.sh. ntfy.sh gets a message ID and
+      # nothing else; the phone then fetches the message from here.
+      NTFY_UPSTREAM_BASE_URL: https://ntfy.sh
+      # Caddy (and only Caddy, on loopback) sets X-Forwarded-For, so rate
+      # limits apply per visitor rather than to Caddy.
+      NTFY_BEHIND_PROXY: "true"
+      # Kept so the phone can fetch a message after the wake-up. Nothing here
+      # needs a backup: accounts come from .env at every start, and a lost
+      # cache only loses messages already delivered.
+      NTFY_CACHE_FILE: /var/lib/ntfy/cache.db
+      NTFY_CACHE_DURATION: 24h
+      NTFY_AUTH_FILE: /var/lib/ntfy/auth.db
+      NTFY_AUTH_DEFAULT_ACCESS: deny-all
+      # Accounts are declared here and applied at every start. `phone` reads
+      # every cosmos-* topic; each agent may only publish to its own, by
+      # token, so a token that leaks from one node can't speak for the other.
+      NTFY_AUTH_USERS: "phone:${NTFY_PHONE_HASH}:user,jupiter:${NTFY_JUPITER_HASH}:user,pluto:${NTFY_PLUTO_HASH}:user"
+      NTFY_AUTH_ACCESS: "phone:cosmos-*:read-only,jupiter:cosmos-jupiter:write-only,pluto:cosmos-pluto:write-only"
+      NTFY_AUTH_TOKENS: "jupiter:${NTFY_JUPITER_TOKEN}:cosmos-agent,pluto:${NTFY_PLUTO_TOKEN}:cosmos-agent"
+      # No web app: the phone app is the only reader.
+      NTFY_WEB_ROOT: disable
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+      - ntfy_data:/var/lib/ntfy
+    # Loopback only, like CrowdSec's: Caddy (host network) and Pluto's agent
+    # are the only clients. The internet reaches it through Caddy, CrowdSec
+    # included.
+    ports:
+      - "127.0.0.1:2586:80"
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --tries=1 http://localhost:80/v1/health -O - | grep -Eo '\"healthy\"\\s*:\\s*true' || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+    labels:
+      cosmos.service: system
+      cosmos.service.description: Push notifications for the phone
+      cosmos.service.url: https://ntfy.pwbcloud.com

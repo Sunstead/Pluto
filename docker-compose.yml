@@ -3,3 +3,5 @@ include:
     project_directory: .
   - path: compose/cosmos.yml
     project_directory: .
+  - path: compose/notify.yml
+    project_directory: .

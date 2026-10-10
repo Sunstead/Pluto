@@ -147,3 +147,15 @@ notes.pwbcloud.com {
         import jupiter notes.pwbcloud.com
     }
 }
+
+# ntfy: the one site served here rather than on Jupiter (compose/notify.yml),
+# so a notification that Jupiter is down still has somewhere to go. CrowdSec
+# and AppSec as for the rest; publishes are small JSON bodies.
+ntfy.pwbcloud.com {
+    import edge
+    route {
+        crowdsec
+        appsec
+        reverse_proxy 127.0.0.1:2586
+    }
+}
