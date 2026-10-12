@@ -15,3 +15,16 @@ whitelist:
     - >-
       evt.Meta.target_fqdn startsWith 'files.' &&
       evt.Meta.http_verb in ['PROPFIND', 'PROPPATCH', 'REPORT', 'MKCOL', 'MOVE', 'COPY', 'LOCK', 'UNLOCK']
+    # OpenCloud answers an expired sign-in with a 401 and a Basic challenge
+    # (for app tokens), which reads as brute force. A client whose token
+    # lapsed while Authentik was unreachable retries its uploads and gets
+    # one each. Nothing guessable sits behind it: passwords only go to
+    # Authentik (basic auth with a password is off), and app tokens are
+    # random.
+    - evt.Meta.target_fqdn startsWith 'files.' && evt.Meta.http_status == '401'
+    # The bouncer's own 403s. Once an address is banned, every request its
+    # apps retry gets one, and counting those as probing renews the ban
+    # for as long as the apps keep trying. An address with a decision
+    # already has its ban; the status check first keeps the lookup off
+    # every other line.
+    - evt.Meta.http_status == '403' && GetActiveDecisionsCount(evt.Meta.source_ip) > 0
