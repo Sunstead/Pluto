@@ -4,7 +4,7 @@
 # Add to this when `cscli alerts list` shows a false positive
 # (docs/RUNBOOK.md); keep each entry as narrow as the noise it covers.
 name: pluto/app-noise
-description: "Expected traffic from OpenCloud and Immich clients"
+description: "Expected traffic from OpenCloud, Immich and Solstice clients"
 whitelist:
   reason: "app traffic behind Pluto"
   expression:
@@ -28,3 +28,12 @@ whitelist:
     # already has its ban; the status check first keeps the lookup off
     # every other line.
     - evt.Meta.http_status == '403' && GetActiveDecisionsCount(evt.Meta.source_ip) > 0
+    # Solstice Sync's clients download attachments as one GET per blob, dozens
+    # in a burst, which http-crawl-non_statics counts as crawling. Only
+    # successful downloads under a vault: a 404 here still counts as probing,
+    # and every /v1 route needs a sign-in.
+    - >-
+      evt.Meta.target_fqdn startsWith 'notes.' &&
+      evt.Meta.http_verb == 'GET' &&
+      evt.Meta.http_status == '200' &&
+      evt.Meta.http_path matches '^/v1/vaults/[0-9a-f-]+/blobs/'
