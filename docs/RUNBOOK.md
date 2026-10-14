@@ -38,6 +38,10 @@ docker compose exec crowdsec cscli bouncers list      # Caddy's bouncer, last pu
 docker compose exec crowdsec cscli decisions delete --ip 203.0.113.7
 ```
 
+An alert whose decision reads `(simul)ban` banned no one: its scenario is in
+`crowdsec/simulation.yaml`. `cscli decisions list --ip <address>` says
+whether an address is really banned; check it before touching the whitelist.
+
 Then make it not happen again. `cscli alerts inspect -d <id>` shows the
 requests behind an alert. If they're normal app traffic, add the narrowest
 expression that matches them to
