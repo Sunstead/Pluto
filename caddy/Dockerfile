@@ -1,6 +1,6 @@
 # Caddy with CrowdSec's bouncer: `http` blocks addresses CrowdSec has
 # decided against, `appsec` checks each request against its AppSec rules.
-# Built on Pluto by scripts/deploy.sh. Bump both versions by hand; Cosmos
+# Built on Pluto by scripts/deploy.sh. Bump both versions by hand; Helion
 # can't see a locally built image.
 ARG CADDY_VERSION=2.11.7
 

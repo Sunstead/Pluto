@@ -1,7 +1,7 @@
 include:
   - path: compose/edge.yml
     project_directory: .
-  - path: compose/cosmos.yml
+  - path: compose/helion.yml
     project_directory: .
   - path: compose/notify.yml
     project_directory: .

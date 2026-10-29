@@ -1,5 +1,5 @@
 # ntfy: push notifications for the phone, public at ntfy.${PUBLIC_DOMAIN}. Both
-# Cosmos agents publish to it: Pluto's straight to 127.0.0.1:2586, Jupiter's
+# Helion agents publish to it: Pluto's straight to 127.0.0.1:2586, Jupiter's
 # over the internet through Caddy. It lives here rather than on Jupiter so
 # that Jupiter going down (or the house losing power) can still be reported,
 # and so the phone doesn't need the tailnet to read a message.
@@ -26,11 +26,11 @@ services:
       NTFY_AUTH_FILE: /var/lib/ntfy/auth.db
       NTFY_AUTH_DEFAULT_ACCESS: deny-all
       # Accounts are declared here and applied at every start. `phone` reads
-      # every cosmos-* topic; each agent may only publish to its own, by
+      # every helion-* topic; each agent may only publish to its own, by
       # token, so a token that leaks from one node can't speak for the other.
       NTFY_AUTH_USERS: "phone:${NTFY_PHONE_HASH}:user,jupiter:${NTFY_JUPITER_HASH}:user,pluto:${NTFY_PLUTO_HASH}:user"
-      NTFY_AUTH_ACCESS: "phone:cosmos-*:read-only,jupiter:cosmos-jupiter:write-only,pluto:cosmos-pluto:write-only"
-      NTFY_AUTH_TOKENS: "jupiter:${NTFY_JUPITER_TOKEN}:cosmos-agent,pluto:${NTFY_PLUTO_TOKEN}:cosmos-agent"
+      NTFY_AUTH_ACCESS: "phone:helion-*:read-only,jupiter:helion-jupiter:write-only,pluto:helion-pluto:write-only"
+      NTFY_AUTH_TOKENS: "jupiter:${NTFY_JUPITER_TOKEN}:helion-agent,pluto:${NTFY_PLUTO_TOKEN}:helion-agent"
       # No web app: the phone app is the only reader.
       NTFY_WEB_ROOT: disable
       TZ: ${TZ:-Etc/UTC}
@@ -49,6 +49,6 @@ services:
       timeout: 10s
       retries: 3
     labels:
-      cosmos.service: system
-      cosmos.service.description: Push notifications for the phone
-      cosmos.service.url: https://ntfy.${PUBLIC_DOMAIN}
+      helion.service: system
+      helion.service.description: Push notifications for the phone
+      helion.service.url: https://ntfy.${PUBLIC_DOMAIN}

@@ -41,9 +41,9 @@ services:
         condition: service_healthy
     restart: unless-stopped
     labels:
-      cosmos.service: system
+      helion.service: system
       # Built here, so no registry to check. Bump caddy/Dockerfile by hand.
-      cosmos.update: "off"
+      helion.update: "off"
 
   crowdsec:
     image: crowdsecurity/crowdsec:v1.8.1
@@ -84,4 +84,4 @@ services:
       start_period: 60s
     restart: unless-stopped
     labels:
-      cosmos.service: system
+      helion.service: system

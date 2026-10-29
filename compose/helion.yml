@@ -1,14 +1,14 @@
 services:
-  cosmos-agent:
-    # Pinned to the same release as Jupiter's (Jupiter/compose/cosmos.yml):
-    # each release pairs with its cosmos-agent.toml, and a newer or older agent
+  helion-agent:
+    # Pinned to the same release as Jupiter's (Jupiter/compose/helion.yml):
+    # each release pairs with its helion-agent.toml, and a newer or older agent
     # refuses a config it does not understand. Bump both together.
-    image: ghcr.io/sunstead/cosmos-agent:0.13.0
-    container_name: cosmos-agent
+    image: ghcr.io/sunstead/helion-agent:0.14.0
+    container_name: helion-agent
     restart: unless-stopped
 
     # Required: the agent reads host network stats from /proc/net/dev, which is
-    # per network namespace. It binds 127.0.0.1:7700 only (cosmos-agent.toml);
+    # per network namespace. It binds 127.0.0.1:7700 only (helion-agent.toml);
     # the tailnet reaches it through `tailscale serve` (scripts/bootstrap.sh).
     network_mode: host
 
@@ -19,19 +19,19 @@ services:
     group_add: ["${DOCKER_GID}"]          # uid 65532 can't read docker.sock without this
 
     environment:
-      COSMOS_AGENT_CONFIG: /etc/cosmos-agent/agent.toml
-      COSMOS_NODE_NAME: pluto
-      # Named as ${HOME_DOMAIN} in cosmos-agent.toml (agent 0.12 and later).
+      HELION_AGENT_CONFIG: /etc/helion-agent/agent.toml
+      HELION_NODE_NAME: pluto
+      # Named as ${HOME_DOMAIN} in helion-agent.toml (agent 0.12 and later).
       HOME_DOMAIN: ${HOME_DOMAIN}
       # The secret sent with its heartbeats to Jupiter's agent ([[peers]] in
-      # cosmos-agent.toml). Compose refuses to start without it, before the
+      # helion-agent.toml). Compose refuses to start without it, before the
       # agent would.
-      COSMOS_AGENT_PEER_TOKEN: ${COSMOS_AGENT_PEER_TOKEN:?set COSMOS_AGENT_PEER_TOKEN in .env, the same value as Jupiter's}
-      RUST_LOG: "info,cosmos_agent=info"
+      HELION_AGENT_PEER_TOKEN: ${HELION_AGENT_PEER_TOKEN:?set HELION_AGENT_PEER_TOKEN in .env, the same value as Jupiter's}
+      RUST_LOG: "info,helion_agent=info"
       TZ: ${TZ:-Etc/UTC}
 
     volumes:
-      - ./cosmos-agent.toml:/etc/cosmos-agent/agent.toml:ro
+      - ./helion-agent.toml:/etc/helion-agent/agent.toml:ro
 
       # `:ro` on a unix socket is not a security control: anyone who can connect()
       # has the full Docker API. The real control is `allow_actions` in the config.
@@ -44,11 +44,11 @@ services:
       # as on Jupiter). uid 65532 gets read-only access from tailscaled.
       - /var/run/tailscale:/host/tailscale
 
-      - cosmos_agent_data:/var/lib/cosmos-agent   # SQLite; the only writable path
+      - helion_agent_data:/var/lib/helion-agent   # SQLite; the only writable path
 
     labels:
-      cosmos.service: cosmos
-      cosmos.service.description: Homelab monitoring agent
+      helion.service: helion
+      helion.service.description: Homelab monitoring agent
 
 volumes:
-  cosmos_agent_data:
+  helion_agent_data:
