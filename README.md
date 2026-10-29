@@ -17,9 +17,9 @@ Everything here can be rebuilt from this repository.
 
 | Public name | Served here |
 | --- | --- |
-| `ntfy.$PUBLIC_DOMAIN` | ntfy, push notifications from both Cosmos agents to the phone |
+| `ntfy.$PUBLIC_DOMAIN` | ntfy, push notifications from both Helion agents to the phone |
 
-Cosmos is not public; it stays on `*.$HOME_DOMAIN`, tailnet only.
+Helion is not public; it stays on `*.$HOME_DOMAIN`, tailnet only.
 
 **Why ntfy is here, not on Jupiter:** a notification that Jupiter is down
 (or that the house lost power) needs a server that isn't Jupiter, and the
@@ -39,7 +39,7 @@ internet ──► Pluto :80/:443   nftables: 80, 443/tcp and 41641/udp, nothing
                └─ ntfy.$PUBLIC_DOMAIN ─► ntfy on 127.0.0.1:2586 (this machine)
 
 your devices ──► tailnet ──► pluto:22                     SSH, keys only
-                         └─► https://pluto.<tailnet>.ts.net:7700   Cosmos agent (tailscale serve)
+                         └─► https://pluto.<tailnet>.ts.net:7700   Helion agent (tailscale serve)
 ```
 
 - **TLS ends here**, so CrowdSec can read the requests. Caddy then opens a
@@ -62,12 +62,12 @@ your devices ──► tailnet ──► pluto:22                     SSH, keys 
 ## Layout
 
 - `docker-compose.yml` includes `compose/*.yml`: `edge.yml` (Caddy, CrowdSec),
-  `cosmos.yml` (the Cosmos agent) and `notify.yml` (ntfy).
+  `helion.yml` (the Helion agent) and `notify.yml` (ntfy).
 - `caddy/`: the Caddyfile and the Dockerfile that builds Caddy with CrowdSec's
   modules.
 - `crowdsec/`: what CrowdSec reads, its whitelist and the scenarios that
   only alert.
-- `cosmos-agent.toml`: the agent's config.
+- `helion-agent.toml`: the agent's config.
 - `host/`: firewall, SSH, sysctl, Docker and unattended-upgrade config, which
   `scripts/bootstrap.sh` installs.
 - `scripts/bootstrap.sh` (once per machine), `scripts/deploy.sh` (every change).
@@ -108,14 +108,14 @@ your devices ──► tailnet ──► pluto:22                     SSH, keys 
    ```
 5. **DNS** at Cloudflare: the records in [docs/RUNBOOK.md](docs/RUNBOOK.md#dns).
    Caddy gets each certificate as soon as its name resolves here.
-6. **Cosmos:** Add node `https://pluto.<tailnet>.ts.net:7700`. On Pluto's node, add
+6. **Helion:** Add node `https://pluto.<tailnet>.ts.net:7700`. On Pluto's node, add
    HTTP uptime checks for the public names, and an ntfy channel: server
-   `http://127.0.0.1:2586`, topic `cosmos-pluto`, token `NTFY_PLUTO_TOKEN`.
-   Jupiter's channel uses `https://ntfy.$PUBLIC_DOMAIN`, topic `cosmos-jupiter`,
+   `http://127.0.0.1:2586`, topic `helion-pluto`, token `NTFY_PLUTO_TOKEN`.
+   Jupiter's channel uses `https://ntfy.$PUBLIC_DOMAIN`, topic `helion-jupiter`,
    token `NTFY_JUPITER_TOKEN`.
 7. **Phone:** in the ntfy app, add the user `phone` on server
-   `https://ntfy.$PUBLIC_DOMAIN`, and subscribe to `cosmos-jupiter` and
-   `cosmos-pluto` there.
+   `https://ntfy.$PUBLIC_DOMAIN`, and subscribe to `helion-jupiter` and
+   `helion-pluto` there.
 
 Rebuilding means doing the same again. Nothing on the old machine needs
 saving: certificates are re-issued, CrowdSec re-learns, and ntfy's accounts

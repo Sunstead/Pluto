@@ -22,12 +22,12 @@
 
 	"grants": [
 		// Your devices: everything, as before. That includes SSH to Pluto and
-		// its Cosmos agent (https://pluto.<tailnet>.ts.net:7700).
+		// its Helion agent (https://pluto.<tailnet>.ts.net:7700).
 		// If you share Jupiter with people outside the tailnet, add
 		// "autogroup:shared" to src, or they lose access.
 		{"src": ["autogroup:member"], "dst": ["*"], "ip": ["*"]},
 
-		// Pluto: Jupiter's Caddy only. The public sites, plus Pluto's Cosmos
+		// Pluto: Jupiter's Caddy only. The public sites, plus Pluto's Helion
 		// agent fetching Authentik's keys, all go through it. (ntfy runs on
 		// Pluto itself.)
 		{"src": ["tag:pluto"], "dst": ["jupiter"], "ip": ["tcp:443"]},
@@ -50,7 +50,7 @@
 			"src":    "tag:pluto",
 			"proto":  "tcp",
 			"accept": ["jupiter:443"],
-			// SSH, plain HTTP, and Jupiter's Cosmos agent.
+			// SSH, plain HTTP, and Jupiter's Helion agent.
 			"deny": ["jupiter:22", "jupiter:80", "jupiter:7700"],
 		},
 	],

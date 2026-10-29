@@ -64,7 +64,7 @@ restart_if_newer() {
   done
 }
 restart_if_newer caddy ./caddy/Caddyfile
-restart_if_newer cosmos-agent ./cosmos-agent.toml
+restart_if_newer helion-agent ./helion-agent.toml
 restart_if_newer crowdsec ./crowdsec/acquis.d/*.yaml ./crowdsec/parsers/s02-enrich/*.yaml ./crowdsec/simulation.yaml
 
 # `up -d` returns once containers start, so one that crash-loops afterwards

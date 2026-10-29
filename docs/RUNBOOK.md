@@ -99,7 +99,7 @@ docker compose logs --tail 50 ntfy
 curl -s https://ntfy.$PUBLIC_DOMAIN/v1/health            # through Caddy and CrowdSec
 ```
 
-- **Send test** on a channel in Cosmos (Settings > Notifications) reports the
+- **Send test** on a channel in Helion (Settings > Notifications) reports the
   error at once: `HTTP 403` is the token or the ACL, `couldn't connect` the
   address.
 - **The phone stops getting them:** a wrong password in the ntfy app gets 401s,
@@ -107,7 +107,7 @@ curl -s https://ntfy.$PUBLIC_DOMAIN/v1/health            # through Caddy and Cro
   `cscli decisions list` for the phone's address before anything else.
 - **Rotating a secret:** change it in `.env` and `scripts/deploy.sh` (or
   `docker compose up -d --force-recreate ntfy`); ntfy re-applies the accounts
-  on start. Then update the token in that node's Cosmos channel.
+  on start. Then update the token in that node's Helion channel.
 
 ## Can't get in
 
@@ -125,5 +125,5 @@ curl -s https://ntfy.$PUBLIC_DOMAIN/v1/health            # through Caddy and Cro
 
 Debian, Tailscale and Docker update themselves (`host/apt.conf.d`), with a
 reboot at 04:30 when a kernel update needs one. Container images are pinned:
-Cosmos shows newer tags on its Updates page, and they're bumped by hand here,
+Helion shows newer tags on its Updates page, and they're bumped by hand here,
 the Caddy build in `caddy/Dockerfile`. Then `scripts/deploy.sh`.

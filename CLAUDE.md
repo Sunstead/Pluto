@@ -7,12 +7,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Pluto is the public edge for the homelab: an OVH VPS (Debian 13) that answers
 for `*.$PUBLIC_DOMAIN`, filters traffic with CrowdSec, and proxies it to Caddy
 on Jupiter over the tailnet. It also runs ntfy (`ntfy.$PUBLIC_DOMAIN`) for both
-nodes' Cosmos agents, so an alert about Jupiter has somewhere to go. `README.md` has the picture and the setup steps,
-`docs/RUNBOOK.md` the operations. Jupiter (`Sunstead/Jupiter`) and Cosmos
-(`Sunstead/Cosmos`) are usually checked out beside this repo.
+nodes' Helion agents, so an alert about Jupiter has somewhere to go. `README.md` has the picture and the setup steps,
+`docs/RUNBOOK.md` the operations. Jupiter (`Sunstead/Jupiter`) and Helion
+(`Sunstead/Helion`) are usually checked out beside this repo.
 
 - `docker-compose.yml` only `include`s `compose/*.yml`: `edge.yml` (Caddy,
-  CrowdSec), `cosmos.yml` (the Cosmos agent) and `notify.yml` (ntfy).
+  CrowdSec), `helion.yml` (the Helion agent) and `notify.yml` (ntfy).
 - `caddy/Caddyfile` has one site per public name, each `import edge` +
   `import to_jupiter <name>`, except `ntfy.$PUBLIC_DOMAIN`, which proxies to
   ntfy on 127.0.0.1:2586 here. Caddy is built here (`caddy/Dockerfile`) with
@@ -55,11 +55,11 @@ nodes' Cosmos agents, so an alert about Jupiter has somewhere to go. `README.md`
 - **Secrets live only in Pluto's `.env`.** Add every new variable to
   `.env.example` with a placeholder and a comment. Nothing secret in git.
 - **Images are pinned to explicit tags.** Caddy's version and the bouncer
-  module's are build args in `caddy/Dockerfile`. The Cosmos agent is pinned
-  to the same release as Jupiter's and bumped with `cosmos-agent.toml` in the
+  module's are build args in `caddy/Dockerfile`. The Helion agent is pinned
+  to the same release as Jupiter's and bumped with `helion-agent.toml` in the
   same commit; an agent refuses a config it doesn't understand
-  (`cosmos-agent --check-config <file>` from the Cosmos repo checks one).
-- **Every service carries a `cosmos.service` label** (`system` for
+  (`helion-agent --check-config <file>` from the Helion repo checks one).
+- **Every service carries a `helion.service` label** (`system` for
   infrastructure), as on Jupiter.
 - **Large uploads must keep working.** No request body limits or timeouts in
   Caddy; `appsec_max_body_bytes` stays a small cap (0 means AppSec buffers

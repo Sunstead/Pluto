@@ -1,4 +1,4 @@
-# cosmos-agent config for Pluto, the public edge.
+# helion-agent config for Pluto, the public edge.
 #
 # Sign-in is through Authentik on Jupiter with the same issuer as Jupiter's
 # agent, so one session in the app covers both nodes. Nothing secret is here.
@@ -27,14 +27,14 @@ allow_anonymous = false
 # Fetched over the tailnet: auth.${HOME_DOMAIN} resolves to Jupiter's
 # Tailscale IP, and the tailnet policy lets Pluto reach jupiter:443 (and
 # nothing else).
-issuer = "https://auth.${HOME_DOMAIN}/application/o/cosmos/"
-client_id = "cosmos"
+issuer = "https://auth.${HOME_DOMAIN}/application/o/helion/"
+client_id = "helion"
 admin_groups = ["homelab-admins"]
 
 [cors]
 # The web UI comes from Jupiter's agent, so it calls this one cross-origin.
 # The desktop app's origins are built in.
-extra_origins = ["https://cosmos.${HOME_DOMAIN}"]
+extra_origins = ["https://helion.${HOME_DOMAIN}"]
 
 [host]
 interval_ms = 1000
@@ -57,7 +57,7 @@ watch_events = true
 
 [history]
 enabled = true
-path = "/var/lib/cosmos-agent/metrics.db"
+path = "/var/lib/helion-agent/metrics.db"
 retain_1s_secs = 3600      # 1 hour at full resolution
 retain_1m_secs = 604800    # 7 days
 retain_5m_secs = 7776000   # 90 days
@@ -80,14 +80,14 @@ enabled = false
 [events]
 # Notification channels are added in the app, not here: ntfy runs on this
 # machine (compose/notify.yml), so the channel's server is
-# http://127.0.0.1:2586, topic cosmos-pluto.
+# http://127.0.0.1:2586, topic helion-pluto.
 enabled = true
 retain_days = 180
 disk_warn_pct = 85
 disk_critical_pct = 95
 
 [uptime]
-# Nothing here has a cosmos.service.url label. Add HTTP checks for the public
+# Nothing here has a helion.service.url label. Add HTTP checks for the public
 # names in the app instead: from Pluto they test the whole path a visitor
 # takes (this Caddy, CrowdSec, the tunnel, Jupiter's Caddy, the app).
 enabled = true
@@ -102,14 +102,14 @@ min_age_days = 3
 [state]
 # Settings edited from the UI, and the event log. Must be on the writable
 # volume.
-path = "/var/lib/cosmos-agent/state.db"
+path = "/var/lib/helion-agent/state.db"
 
 # Jupiter's agent, which this one watches and is watched by: each reports the
 # other when it stops answering. This side sends the heartbeats, through
 # Jupiter's Caddy on jupiter:443 (the one address the tailnet policy lets
 # Pluto reach); Jupiter can't reach Pluto. The shared secret is
-# COSMOS_AGENT_PEER_TOKEN, from .env. Uptime checks of the public names
+# HELION_AGENT_PEER_TOKEN, from .env. Uptime checks of the public names
 # should say they go through jupiter, so Jupiter going down is one alert.
 [[peers]]
 name = "jupiter"
-url = "https://cosmos.${HOME_DOMAIN}"
+url = "https://helion.${HOME_DOMAIN}"
