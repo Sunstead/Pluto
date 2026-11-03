@@ -3,7 +3,7 @@ services:
     # Pinned to the same release as Jupiter's (Jupiter/compose/helion.yml):
     # each release pairs with its helion-agent.toml, and a newer or older agent
     # refuses a config it does not understand. Bump both together.
-    image: ghcr.io/sunstead/helion-agent:0.14.0
+    image: ghcr.io/sunstead/helion-agent:0.15.1
     container_name: helion-agent
     restart: unless-stopped
 
