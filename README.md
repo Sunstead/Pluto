@@ -14,6 +14,8 @@ Everything here can be rebuilt from this repository.
 | `git.$PUBLIC_DOMAIN` | Gitea (HTTPS only) |
 | `atlas.$PUBLIC_DOMAIN` | Atlas |
 | `notes.$PUBLIC_DOMAIN` | Solstice: the web app and the desktop apps' sync |
+| `lodestone.$PUBLIC_DOMAIN` | Lodestone: Minecraft servers (the web UI) |
+| `play.$PUBLIC_DOMAIN` | Lodestone's game servers: raw TCP on a fixed port range, not HTTP |
 
 | Public name | Served here |
 | --- | --- |
@@ -31,12 +33,15 @@ to ntfy.sh (Jupiter's `docs/NOTIFICATIONS.md`).
 ## How a request gets in
 
 ```
-internet ──► Pluto :80/:443   nftables: 80, 443/tcp and 41641/udp, nothing else
+internet ──► Pluto :80/:443   nftables: 80, 443, the game range/tcp and 41641/udp, nothing else
              Caddy            TLS for the public name (its own Let's Encrypt cert)
                ├─ CrowdSec    banned address? → 403. AppSec rule matches? → 403.
-               ├─ proxy ──────► tailnet (Pluto may reach jupiter:443 and nothing else)
+               ├─ proxy ──────► tailnet (Pluto may reach jupiter:443 and the game ports)
                │                 └─► Jupiter's Caddy (*.$PUBLIC_DOMAIN, its own cert) ─► app
                └─ ntfy.$PUBLIC_DOMAIN ─► ntfy on 127.0.0.1:2586 (this machine)
+
+players ───► Pluto :25565-25599  HAProxy: per-address limits, logged
+               └─ same port ──► tailnet ──► Jupiter: a Minecraft server
 
 your devices ──► tailnet ──► pluto:22                     SSH, keys only
                          └─► https://pluto.<tailnet>.ts.net:7700   Helion agent (tailscale serve)
@@ -55,14 +60,19 @@ your devices ──► tailnet ──► pluto:22                     SSH, keys 
 - **CrowdSec** blocks addresses on its community blocklist, bans ones its
   scenarios catch in Caddy's logs (scanners, CVE probes, brute force), and
   checks every request against AppSec's virtual patches before it's proxied.
+- **Game ports are TCP forwards**, not proxied requests: no TLS, no
+  CrowdSec (HAProxy limits connections per address instead). The servers
+  themselves keep `online-mode` on and are contained on Jupiter (its
+  `docs/EDGE.md`).
 - **The tailnet policy** ([docs/tailnet-policy.hujson](docs/tailnet-policy.hujson))
-  only lets `tag:pluto` reach `jupiter:443`. If Pluto is ever compromised, it
-  can't reach your other devices.
+  only lets `tag:pluto` reach `jupiter:443` and the game ports. If Pluto is
+  ever compromised, it can't reach your other devices.
 
 ## Layout
 
 - `docker-compose.yml` includes `compose/*.yml`: `edge.yml` (Caddy, CrowdSec),
-  `helion.yml` (the Helion agent) and `notify.yml` (ntfy).
+  `helion.yml` (the Helion agent), `notify.yml` (ntfy) and `game.yml` (the
+  game-port forward, configured in `game/haproxy.cfg`).
 - `caddy/`: the Caddyfile and the Dockerfile that builds Caddy with CrowdSec's
   modules.
 - `crowdsec/`: what CrowdSec reads, its whitelist and the scenarios that

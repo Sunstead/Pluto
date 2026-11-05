@@ -35,9 +35,10 @@ for attempt in 1 2 3; do
 done
 
 # With the new image, before anything running is touched: a broken Caddyfile
-# stops the deploy here instead of taking every site down.
+# (or game proxy config) stops the deploy here instead of taking every site down.
 step "Validate Caddyfile"
 docker compose run --rm --no-deps caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+docker compose run --rm --no-deps game haproxy -c -f /usr/local/etc/haproxy/haproxy.cfg
 
 step "Apply changes"
 docker compose up -d --remove-orphans
@@ -64,6 +65,7 @@ restart_if_newer() {
   done
 }
 restart_if_newer caddy ./caddy/Caddyfile
+restart_if_newer game ./game/haproxy.cfg
 restart_if_newer helion-agent ./helion-agent.toml
 restart_if_newer crowdsec ./crowdsec/acquis.d/*.yaml ./crowdsec/parsers/s02-enrich/*.yaml ./crowdsec/simulation.yaml
 

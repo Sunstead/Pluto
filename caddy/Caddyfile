@@ -148,6 +148,24 @@ notes.{$PUBLIC_DOMAIN} {
     }
 }
 
+# Lodestone: Minecraft servers' web UI and API. Game connections aren't
+# HTTP and don't come through Caddy: they're play.{$PUBLIC_DOMAIN} on the
+# game proxy (compose/game.yml).
+# No AppSec on uploads: their bodies are world zips, modpacks and jars, whose
+# bytes match rules written for text, and every upload needs a sign-in.
+# CrowdSec's decisions and AppSec on everything else still apply. Event
+# streams (/api/v1/events, console streams) are flushed as they come, which
+# Caddy does for text/event-stream by default.
+lodestone.{$PUBLIC_DOMAIN} {
+    import edge
+    @not_upload not path /api/v1/worlds/import /api/v1/profiles/import /api/v1/profiles/*/content/upload /api/v1/profiles/*/content/*/file
+    route {
+        crowdsec
+        appsec @not_upload
+        import jupiter lodestone.{$PUBLIC_DOMAIN}
+    }
+}
+
 # ntfy: the one site served here rather than on Jupiter (compose/notify.yml),
 # so a notification that Jupiter is down still has somewhere to go. CrowdSec
 # and AppSec as for the rest; publishes are small JSON bodies.
