@@ -19,6 +19,11 @@ No wildcard record: a name only resolves once it's meant to be public.
 `play` is the one name that isn't a website: Minecraft players connect to it on
 the game ports (below). Grey cloud matters most there, since Cloudflare's proxy
 only carries HTTP. It has no certificate and no site in `caddy/Caddyfile`.
+
+Servers' address names (`survival.play.$PUBLIC_DOMAIN`) are SRV records that
+Lodestone on Jupiter keeps in Cloudflare itself, tagged with a `lodestone:`
+comment, all pointing at `play.$PUBLIC_DOMAIN` on a game port. Nothing to do
+here for them; don't edit those records by hand.
 Jupiter's own `*.$PUBLIC_DOMAIN` certificate comes from a DNS-01 challenge with
 its Cloudflare token, which needs **Zone > DNS > Edit** on `$PUBLIC_DOMAIN` too.
 
@@ -94,7 +99,7 @@ but the public name doesn't, the problem is on Pluto.
 Pluto shouldn't be able to reach anything else on Jupiter but 443 and the
 game ports. These should time out:
 `curl -m 5 http://$(sed -n 's/^JUPITER_TS_IP=//p' .env):7700/healthz`,
-`nc -zv -w 5 $(sed -n 's/^JUPITER_TS_IP=//p' .env) 25600` (the first RCON port).
+`nc -zv -w 5 $(sed -n 's/^JUPITER_TS_IP=//p' .env) 25575` (the first RCON port).
 
 ## Game connections
 
@@ -106,7 +111,7 @@ ones in 10 seconds, and logs every connection.
 
 ```bash
 docker compose logs --tail 50 game                       # who connected, for how long
-nc -zv $(sed -n 's/^JUPITER_TS_IP=//p' .env) 25565       # Jupiter's side, if a server uses it
+nc -zv $(sed -n 's/^JUPITER_TS_IP=//p' .env) 30000       # Jupiter's side, if a server uses it
 ```
 
 - **The range** is in four places: `.env` here, `host/nftables.conf`, the
@@ -131,7 +136,7 @@ open:
 
 ```bash
 nmap -Pn -p 1-65535 --open <Pluto's IPv4>     # 80, 443 and the game range
-nmap -Pn -sU -p 25565,41641 <Pluto's IPv4>    # no query port
+nmap -Pn -sU -p 30000,41641 <Pluto's IPv4>    # no query port
 ```
 
 ## Notifications (ntfy)

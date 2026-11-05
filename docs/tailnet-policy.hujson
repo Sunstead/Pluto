@@ -32,7 +32,7 @@
 		// through Caddy. (ntfy runs on Pluto itself.) The game ports reach
 		// Minecraft servers only: RCON listens on Jupiter's 127.0.0.1, and the
 		// range is LODESTONE_GAME_PORTS on both machines.
-		{"src": ["tag:pluto"], "dst": ["jupiter"], "ip": ["tcp:443", "tcp:25565-25599"]},
+		{"src": ["tag:pluto"], "dst": ["jupiter"], "ip": ["tcp:443", "tcp:30000-30049"]},
 	],
 
 	// Tailscale SSH, unchanged from the default. Pluto uses plain OpenSSH
@@ -51,18 +51,22 @@
 		{
 			"src":    "tag:pluto",
 			"proto":  "tcp",
-			"accept": ["jupiter:443", "jupiter:25565", "jupiter:25599"],
+			"accept": ["jupiter:443", "jupiter:30000", "jupiter:30049"],
 			// SSH, plain HTTP, Jupiter's Helion agent, Lodestone itself, and
-			// the ports either side of the game range. 25600 is where Lodestone
-			// puts the first server's RCON (outside the range, and on
-			// Jupiter's 127.0.0.1 besides).
-			"deny": ["jupiter:22", "jupiter:80", "jupiter:7700", "jupiter:7878", "jupiter:25564", "jupiter:25600"],
+			// the ports either side of the game range, Minecraft's default
+			// (unused here), and 25575, where Lodestone puts the first
+			// server's RCON (outside the range, and on Jupiter's 127.0.0.1
+			// besides).
+			"deny": [
+				"jupiter:22", "jupiter:80", "jupiter:7700", "jupiter:7878",
+				"jupiter:29999", "jupiter:30050", "jupiter:25565", "jupiter:25575",
+			],
 		},
 		{
 			// Game ports are TCP only: no UDP (Minecraft's query).
 			"src":    "tag:pluto",
 			"proto":  "udp",
-			"deny":   ["jupiter:25565"],
+			"deny":   ["jupiter:30000"],
 		},
 	],
 }

@@ -40,7 +40,7 @@ internet ──► Pluto :80/:443   nftables: 80, 443, the game range/tcp and 41
                │                 └─► Jupiter's Caddy (*.$PUBLIC_DOMAIN, its own cert) ─► app
                └─ ntfy.$PUBLIC_DOMAIN ─► ntfy on 127.0.0.1:2586 (this machine)
 
-players ───► Pluto :25565-25599  HAProxy: per-address limits, logged
+players ───► Pluto :30000-30049  HAProxy: per-address limits, logged
                └─ same port ──► tailnet ──► Jupiter: a Minecraft server
 
 your devices ──► tailnet ──► pluto:22                     SSH, keys only
