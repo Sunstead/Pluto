@@ -1,0 +1,22 @@
+# Game connections for Lodestone's Minecraft servers (play.${PUBLIC_DOMAIN}):
+# a TCP forward of the game-port range to Jupiter over the tailnet
+# (game/haproxy.cfg). docs/RUNBOOK.md, "Game connections".
+services:
+  game:
+    image: haproxy:3.2.4-alpine
+    # Host networking, like Caddy: HAProxy sees each player's real address
+    # (for its per-address limits and the log), over IPv6 too. nftables
+    # (host/nftables.conf) decides what is reachable.
+    network_mode: host
+    environment:
+      LODESTONE_GAME_PORTS: ${LODESTONE_GAME_PORTS:?set LODESTONE_GAME_PORTS in .env}
+      JUPITER_TS_IP: ${JUPITER_TS_IP}
+    volumes:
+      - ./game/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    # Runs as the image's haproxy user; the ports are above 1024.
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    labels:
+      helion.service: system

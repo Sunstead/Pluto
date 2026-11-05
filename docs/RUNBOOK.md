@@ -9,12 +9,21 @@ Cloudflare's proxy would end TLS before Pluto and cap uploads at 100 MB.
 
 | Type | Name | Value |
 | --- | --- | --- |
-| A | `auth`, `photos`, `files`, `git`, `atlas`, `notes`, `ntfy` | Pluto's IPv4 |
-| AAAA | the same seven | Pluto's IPv6, once `curl -6 https://photos.$PUBLIC_DOMAIN` works from a v6 network |
+| A | `auth`, `photos`, `files`, `git`, `atlas`, `notes`, `lodestone`, `play`, `ntfy` | Pluto's IPv4 |
+| AAAA | the same nine | Pluto's IPv6, once `curl -6 https://photos.$PUBLIC_DOMAIN` works from a v6 network |
 | CAA | `@` | `0 issue "letsencrypt.org"` |
 | CAA | `@` | `0 issuewild "letsencrypt.org"` (Jupiter's wildcard) |
 
 No wildcard record: a name only resolves once it's meant to be public.
+
+`play` is the one name that isn't a website: Minecraft players connect to it on
+the game ports (below). Grey cloud matters most there, since Cloudflare's proxy
+only carries HTTP. It has no certificate and no site in `caddy/Caddyfile`.
+
+Servers' address names (`survival.play.$PUBLIC_DOMAIN`) are SRV records that
+Lodestone on Jupiter keeps in Cloudflare itself, tagged with a `lodestone:`
+comment, all pointing at `play.$PUBLIC_DOMAIN` on a game port. Nothing to do
+here for them; don't edit those records by hand.
 Jupiter's own `*.$PUBLIC_DOMAIN` certificate comes from a DNS-01 challenge with
 its Cloudflare token, which needs **Zone > DNS > Edit** on `$PUBLIC_DOMAIN` too.
 
@@ -87,8 +96,48 @@ curl -sI --resolve photos.$PUBLIC_DOMAIN:443:$(sed -n 's/^JUPITER_TS_IP=//p' .en
 The last one goes straight to Jupiter's Caddy, skipping Pluto's. If it works
 but the public name doesn't, the problem is on Pluto.
 
-Pluto shouldn't be able to reach anything else on Jupiter. This should time out:
-`curl -m 5 http://$(sed -n 's/^JUPITER_TS_IP=//p' .env):7700/healthz`
+Pluto shouldn't be able to reach anything else on Jupiter but 443 and the
+game ports. These should time out:
+`curl -m 5 http://$(sed -n 's/^JUPITER_TS_IP=//p' .env):7700/healthz`,
+`nc -zv -w 5 $(sed -n 's/^JUPITER_TS_IP=//p' .env) 25575` (the first RCON port).
+
+## Game connections
+
+`play.$PUBLIC_DOMAIN:<port>` reaches Lodestone's Minecraft servers on Jupiter.
+`compose/game.yml` runs HAProxy (`game/haproxy.cfg`), which forwards each
+port in `LODESTONE_GAME_PORTS` to the same port on Jupiter over the tailnet,
+and nothing else. It limits each address to 8 open connections and 15 new
+ones in 10 seconds, and logs every connection.
+
+```bash
+docker compose logs --tail 50 game                       # who connected, for how long
+nc -zv $(sed -n 's/^JUPITER_TS_IP=//p' .env) 30000       # Jupiter's side, if a server uses it
+```
+
+- **The range** is in four places: `.env` here, `host/nftables.conf`, the
+  tailnet policy, and `LODESTONE_GAME_PORTS` in Jupiter's `.env`. Change them
+  together, then `scripts/deploy.sh` and `sudo scripts/bootstrap.sh` (for the
+  firewall).
+- **CrowdSec doesn't see this traffic.** Its bans cover the websites only.
+  Block an address from the game ports by hand in `host/nftables.conf`, or
+  ban the player by name on the server.
+- **Servers see Pluto, not the player.** Every connection reaches a server
+  from Jupiter's side of the tunnel, so bans by IP in Minecraft ban everyone.
+  The real address is in this log. PROXY protocol would fix it, but only
+  Paper understands it; vanilla and modded servers refuse every connection
+  that has it, so it's off.
+- **Players can't connect, the website works:** is the port in the range, and
+  does `docker compose logs game` show the connection? `<NOSRV>` or a
+  connection that ends at once means Jupiter refused it: the server isn't
+  running, or the tailnet policy is missing the range.
+
+Check from outside (another network, not the tailnet) that only these are
+open:
+
+```bash
+nmap -Pn -p 1-65535 --open <Pluto's IPv4>     # 80, 443 and the game range
+nmap -Pn -sU -p 30000,41641 <Pluto's IPv4>    # no query port
+```
 
 ## Notifications (ntfy)
 

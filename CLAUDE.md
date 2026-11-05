@@ -12,7 +12,9 @@ nodes' Helion agents, so an alert about Jupiter has somewhere to go. `README.md`
 (`Sunstead/Helion`) are usually checked out beside this repo.
 
 - `docker-compose.yml` only `include`s `compose/*.yml`: `edge.yml` (Caddy,
-  CrowdSec), `helion.yml` (the Helion agent) and `notify.yml` (ntfy).
+  CrowdSec), `helion.yml` (the Helion agent), `notify.yml` (ntfy) and
+  `game.yml` (HAProxy forwarding Lodestone's game-port range to Jupiter,
+  `game/haproxy.cfg`).
 - `caddy/Caddyfile` has one site per public name, each `import edge` +
   `import to_jupiter <name>`, except `ntfy.$PUBLIC_DOMAIN`, which proxies to
   ntfy on 127.0.0.1:2586 here. Caddy is built here (`caddy/Dockerfile`) with
@@ -30,7 +32,8 @@ nodes' Helion agents, so an alert about Jupiter has somewhere to go. `README.md`
 
 ## Security model (don't weaken it by accident)
 
-- **Nothing listens publicly except Caddy (80/443) and tailscaled (41641/udp).**
+- **Nothing listens publicly except Caddy (80/443), the game proxy (the
+  `LODESTONE_GAME_PORTS` range, TCP) and tailscaled (41641/udp).**
   Caddy and the agent use host networking; CrowdSec's and ntfy's ports are
   published on 127.0.0.1 only; the agent binds 127.0.0.1:7700 and the tailnet reaches it
   through `tailscale serve` on :7700 of Pluto's Tailscale addresses. That
@@ -43,7 +46,9 @@ nodes' Helion agents, so an alert about Jupiter has somewhere to go. `README.md`
   from HTTP/TLS-ALPN challenges; deploys are `scripts/deploy.sh` by hand. Keep
   it that way.
 - **The tailnet policy is the containment.** Pluto (`tag:pluto`) may reach
-  `jupiter:443` and nothing else. Anything new that needs more access is a
+  `jupiter:443` and the game-port range, and nothing else. The game proxy
+  forwards only that range, never RCON, query or SSH; the range lives in
+  `.env`, `host/nftables.conf`, the policy and Jupiter's `.env`. Anything new that needs more access is a
   policy change in both places, with its `tests` updated.
 - Pluto terminates TLS and sees plaintext. Upstream connections to Jupiter
   are TLS too, verified against Jupiter's real certificate via a literal

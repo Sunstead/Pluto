@@ -5,8 +5,8 @@
 //
 // Before: the default, every device reaches every device. After: your own
 // devices still reach everything; Pluto, the public edge, reaches Jupiter's
-// Caddy and nothing else. If Pluto were ever taken over, that's all the
-// tailnet it gets.
+// Caddy and Lodestone's game ports, and nothing else. If Pluto were ever
+// taken over, that's all the tailnet it gets.
 {
 	"tagOwners": {
 		// Pluto joins with a pre-approved, single-use auth key carrying this
@@ -27,10 +27,12 @@
 		// "autogroup:shared" to src, or they lose access.
 		{"src": ["autogroup:member"], "dst": ["*"], "ip": ["*"]},
 
-		// Pluto: Jupiter's Caddy only. The public sites, plus Pluto's Helion
-		// agent fetching Authentik's keys, all go through it. (ntfy runs on
-		// Pluto itself.)
-		{"src": ["tag:pluto"], "dst": ["jupiter"], "ip": ["tcp:443"]},
+		// Pluto: Jupiter's Caddy, and Lodestone's game ports. The public
+		// sites, plus Pluto's Helion agent fetching Authentik's keys, all go
+		// through Caddy. (ntfy runs on Pluto itself.) The game ports reach
+		// Minecraft servers only: RCON listens on Jupiter's 127.0.0.1, and the
+		// range is LODESTONE_GAME_PORTS on both machines.
+		{"src": ["tag:pluto"], "dst": ["jupiter"], "ip": ["tcp:443", "tcp:30000-30049"]},
 	],
 
 	// Tailscale SSH, unchanged from the default. Pluto uses plain OpenSSH
@@ -49,9 +51,22 @@
 		{
 			"src":    "tag:pluto",
 			"proto":  "tcp",
-			"accept": ["jupiter:443"],
-			// SSH, plain HTTP, and Jupiter's Helion agent.
-			"deny": ["jupiter:22", "jupiter:80", "jupiter:7700"],
+			"accept": ["jupiter:443", "jupiter:30000", "jupiter:30049"],
+			// SSH, plain HTTP, Jupiter's Helion agent, Lodestone itself, and
+			// the ports either side of the game range, Minecraft's default
+			// (unused here), and 25575, where Lodestone puts the first
+			// server's RCON (outside the range, and on Jupiter's 127.0.0.1
+			// besides).
+			"deny": [
+				"jupiter:22", "jupiter:80", "jupiter:7700", "jupiter:7878",
+				"jupiter:29999", "jupiter:30050", "jupiter:25565", "jupiter:25575",
+			],
+		},
+		{
+			// Game ports are TCP only: no UDP (Minecraft's query).
+			"src":    "tag:pluto",
+			"proto":  "udp",
+			"deny":   ["jupiter:30000"],
 		},
 	],
 }
