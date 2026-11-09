@@ -1,10 +1,11 @@
 # Normal traffic from the apps behind Pluto that the generic HTTP scenarios
 # would count against the client. Whitelisted lines are dropped before any
-# scenario sees them; AppSec still checks every one of these requests inline.
+# scenario sees them; AppSec still checks these requests inline on the sites
+# that run it (caddy/Caddyfile).
 # Add to this when `cscli alerts list` shows a false positive
 # (docs/RUNBOOK.md); keep each entry as narrow as the noise it covers.
 name: pluto/app-noise
-description: "Expected traffic from OpenCloud and Immich clients"
+description: "Expected traffic from app clients behind Pluto"
 whitelist:
   reason: "app traffic behind Pluto"
   expression:
@@ -15,6 +16,13 @@ whitelist:
     - >-
       evt.Meta.target_fqdn startsWith 'files.' &&
       evt.Meta.http_verb in ['PROPFIND', 'PROPPATCH', 'REPORT', 'MKCOL', 'MOVE', 'COPY', 'LOCK', 'UNLOCK']
+    # Calendar and contact clients: the same reading as above. Unlike the
+    # entry below, 401s are excluded: this site takes passwords, so failed
+    # logins have to keep counting.
+    - >-
+      evt.Meta.target_fqdn startsWith 'dav.' &&
+      evt.Meta.http_verb in ['PROPFIND', 'PROPPATCH', 'REPORT', 'MKCOL', 'MKCALENDAR', 'MOVE', 'COPY', 'LOCK', 'UNLOCK'] &&
+      evt.Meta.http_status != '401'
     # OpenCloud answers an expired sign-in with a 401 and a Basic challenge
     # (for app tokens), which reads as brute force. A client whose token
     # lapsed while Authentik was unreachable retries its uploads and gets

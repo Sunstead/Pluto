@@ -15,6 +15,7 @@ Everything here can be rebuilt from this repository.
 | `atlas.$PUBLIC_DOMAIN` | Atlas |
 | `notes.$PUBLIC_DOMAIN` | Solstice: the web app and the desktop apps' sync |
 | `lodestone.$PUBLIC_DOMAIN` | Lodestone: Minecraft servers (the web UI) |
+| `dav.$PUBLIC_DOMAIN` | Radicale: calendars, contacts and tasks over CalDAV and CardDAV |
 | `play.$PUBLIC_DOMAIN` | Lodestone's game servers: raw TCP on a fixed port range, not HTTP |
 
 | Public name | Served here |
