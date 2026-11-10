@@ -126,10 +126,19 @@ git.{$PUBLIC_DOMAIN} {
     import to_jupiter git.{$PUBLIC_DOMAIN}
 }
 
-# Atlas
+# Atlas. No AppSec on changes through the API: their bodies are people's
+# contacts (and later tasks and events), and a note quoting an exploit would
+# be blocked as one, as on notes. below. Reads and everything else keep
+# AppSec, every /v1 route needs a sign-in, and CrowdSec's decisions still
+# apply to everything.
 atlas.{$PUBLIC_DOMAIN} {
     import edge
-    import to_jupiter atlas.{$PUBLIC_DOMAIN}
+    @not_api_write expression !(path('/v1/*') && !method('GET', 'HEAD'))
+    route {
+        crowdsec
+        appsec @not_api_write
+        import jupiter atlas.{$PUBLIC_DOMAIN}
+    }
 }
 
 # Solstice: the web app, and the desktop apps' sync (a WebSocket on /v1/sync).
@@ -169,10 +178,15 @@ lodestone.{$PUBLIC_DOMAIN} {
 # Radicale: calendars and contacts for phones and computers. No AppSec: every
 # body is someone's calendar or contact data, which its rules would read as
 # attacks. CrowdSec's decisions still apply.
+# Atlas's own login reaches every user's collections, and Atlas uses it only
+# inside Jupiter, so it's refused here: a Basic login whose user is "atlas"
+# (base64 "atlas:" is YXRsYXM6, whatever the password).
 dav.{$PUBLIC_DOMAIN} {
     import edge
+    @atlas_login header_regexp Authorization (?i)^basic\s+YXRsYXM6
     route {
         crowdsec
+        respond @atlas_login 403
         import jupiter dav.{$PUBLIC_DOMAIN}
     }
 }
